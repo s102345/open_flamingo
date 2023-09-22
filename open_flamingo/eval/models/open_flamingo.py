@@ -32,7 +32,7 @@ class EvalModel(BaseEvalModel):
 
         self.device = (
             model_args["device"]
-            if ("device" in model_args and model_args["device"] >= 0)
+            if ("device" in model_args and model_args["device"])
             else "cpu"
         )
 
