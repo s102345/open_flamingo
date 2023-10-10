@@ -1,7 +1,10 @@
-*.pt
-*.json
+*.jpg
+
 
 wandb/
+
+# Datas
+data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
