@@ -2,7 +2,6 @@ import wget, gdown, os
 import zipfile
 import json
 
-
 def download_files():
     root = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(root, 'data')

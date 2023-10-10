@@ -3,7 +3,7 @@
     "--vision_encoder_pretrained": "openai",
     "--lm_path": "anas-awadalla/mpt-1b-redpajama-200b",
     "--lm_tokenizer_path": "anas-awadalla/mpt-1b-redpajama-200b",
-    "--checkpoint_path": "./checkpoint.pt",
+    "--checkpoint_path": "./ckpt/checkpoint.pt",
     "--device": "cuda:0",
     "--cross_attn_every_n_layers": 1,
     "--rice": "NONE",

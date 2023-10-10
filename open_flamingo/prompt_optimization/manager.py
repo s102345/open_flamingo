@@ -1,6 +1,6 @@
 import subprocess
 import json
-
+import wget
 import os
 os.environ["MASTER_ADDR"] = 'localhost'
 os.environ["MASTER_PORT"] = '8888'
@@ -24,8 +24,16 @@ def get_score(prompt: str):
             break
     return score
 
+def download_checkpoint():
+    if not os.path.exists('ckpt'):
+        os.mkdir('ckpt')
+    if not os.path.exists('ckpt/checkpoint.pt'):
+        from huggingface_hub import hf_hub_download
+        hf_hub_download("openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct", "ckpt/checkpoint.pt")
+
 def main():
     make_dataset()
+    download_checkpoint()
     get_score("A photo of")
 
 if __name__ == '__main__':
