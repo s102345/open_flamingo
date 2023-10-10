@@ -1,6 +1,12 @@
 import subprocess
 import json
 
+import os
+os.environ["MASTER_ADDR"] = 'localhost'
+os.environ["MASTER_PORT"] = '8888'
+
+from make_dataset import make_dataset
+
 def get_score(prompt: str):
     scorer_param = json.load(open('prompt_optimization\scorer_params.json'))
     parameters = ['python', './eval/scorer.py', '--prompt', prompt]
@@ -19,6 +25,7 @@ def get_score(prompt: str):
     return score
 
 def main():
+    make_dataset()
     get_score("A photo of")
 
 if __name__ == '__main__':
