@@ -13,15 +13,18 @@ def download_files():
 
     # Annotations file
     if not os.path.exists(f'{path}/captions_train2014.json'):
-        wget.download("https://huggingface.co/datasets/openflamingo/eval_benchmark/raw/main/mscoco_karpathy/annotations/captions_train2014.json", f'{path}/captions_train2014.json')
+        print("Downloading annotation file...")
+        wget.download("https://huggingface.co/datasets/openflamingo/eval_benchmark/raw/main/mscoco_karpathy/annotations/captions_train2014.json", f'{path}/captions_train2014.json', bar=wget.bar_adaptive)
     
     # Karpathy splits with modification
     if not os.path.exists(f'{path}/prompt_karpathy_coco.json'):
+        print("Downloading splits file...")
         gdown.download('https://drive.google.com/u/3/uc?id=1WFzpbqHB7pH7KjPaJSKa0bk6Hzk5ztZF&export=download', f'{path}/prompt_karpathy_coco.json', quiet=False)
 
     # Download the COCO2014 dataset
     if not os.path.exists(f'{path}/train2014'):
-        wget.download("http://images.cocodataset.org/zips/train2014.zip", f'{path}/train2014.zip')
+        print("Downloading MSCOCO 2014 dataset...")
+        wget.download("http://images.cocodataset.org/zips/train2014.zip", f'{path}/train2014.zip', bar=wget.bar_adaptive)
         with zipfile.ZipFile(f'{path}/train2014.zip',"r") as zip_ref:
             zip_ref.extractall(f"{path}")
         os.remove(f'{path}/train2014.zip')

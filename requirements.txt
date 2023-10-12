@@ -7,3 +7,4 @@ open_clip_torch>=2.16.0
 sentencepiece
 openai
 wandb
+wget
