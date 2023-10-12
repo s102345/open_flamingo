@@ -5,9 +5,11 @@ import os
 import uuid
 from collections import defaultdict
 
+import sys
 import numpy as np
 import torch
 import utils
+
 
 from coco_metric import compute_cider, postprocess_captioning_generation
 from eval_datasets import CaptionDataset
@@ -15,203 +17,69 @@ from eval_datasets import CaptionDataset
 from rices import RICES
 from tqdm import tqdm
 
-
 from eval_model import BaseEvalModel
 
 from open_flamingo.src.flamingo import Flamingo
 
 from open_flamingo.train.distributed import init_distributed_device, world_info_from_env
+from models.open_flamingo import EvalModel
 
-parser = argparse.ArgumentParser()
+root = os.path.dirname(os.path.abspath(__file__))
 
-parser.add_argument(
-    "--model",
-    type=str,
-    help="Model name. Currently only `OpenFlamingo` is supported.",
-    default="open_flamingo",
-)
-parser.add_argument(
-    "--results_file", type=str, default=None, help="JSON file to save results"
-)
+eval_model = None
+cached_features = None
+configs = dict
 
-# Trial arguments
-parser.add_argument("--shots", nargs="+", default=[0, 4, 8, 16, 32], type=int)
-parser.add_argument(
-    "--num_trials",
-    type=int,
-    default=1,
-    help="Number of trials to run for each shot using different demonstrations",
-)
-parser.add_argument(
-    "--trial_seeds",
-    nargs="+",
-    type=int,
-    default=[42],
-    help="Seeds to use for each trial for picking demonstrations and eval sets",
-)
-parser.add_argument(
-    "--num_samples",
-    type=int,
-    default=-1,
-    help="Number of samples to evaluate on. -1 for all samples.",
-)
-parser.add_argument(
-    "--query_set_size", type=int, default=2048, help="Size of demonstration query set"
-)
+def init():
+    global eval_model, cached_features
+    global configs
+    configs = json.load(open(f'{root}/scorer_params.json'))
 
-parser.add_argument("--batch_size", type=int, default=8)
-
-
-parser.add_argument(
-    "--rices",
-    action="store_true",
-    help="Whether to use RICES for evaluation. If False, uses random demonstrations.",
-)
-parser.add_argument(
-    "--rices_vision_encoder_path",
-    default="ViT-L-14",
-    type=str,
-    help="CLIP vision encoder to use for RICES if cached_demonstration_features is None.",
-)
-parser.add_argument(
-    "--rices_vision_encoder_pretrained",
-    default="openai",
-    type=str,
-    help="CLIP vision encoder to use for RICES if cached_demonstration_features is None.",
-)
-parser.add_argument(
-    "--cached_demonstration_features",
-    default=None,
-    help="Directory where rices features for all choices of in-context examples are stored as a pkl file with the dataset name. If None, features are re-computed by script.",
-)
-
-# Per-dataset evaluation flags
-parser.add_argument(
-    "--eval_coco",
-    action="store_true",
-    default=False,
-    help="Whether to evaluate on COCO.",
-)
-
-# Dataset arguments
-## COCO Dataset
-parser.add_argument(
-    "--coco_train_image_dir_path",
-    type=str,
-    default=None,
-)
-parser.add_argument(
-    "--coco_val_image_dir_path",
-    type=str,
-    default=None,
-)
-parser.add_argument(
-    "--coco_karpathy_json_path",
-    type=str,
-    default=None,
-)
-parser.add_argument(
-    "--coco_annotations_json_path",
-    type=str,
-    default=None,
-)
-
-# Distributed evaluation
-parser.add_argument(
-    "--dist-url",
-    default="env://",
-    type=str,
-    help="url used to set up distributed training",
-)
-parser.add_argument(
-    "--dist-backend", default="nccl", type=str, help="distributed backend"
-)
-parser.add_argument(
-    "--horovod",
-    default=False,
-    action="store_true",
-    help="Use horovod for distributed training.",
-)
-parser.add_argument(
-    "--no-set-device-rank",
-    default=False,
-    action="store_true",
-    help="Don't set device index from local rank (when CUDA_VISIBLE_DEVICES restricted to one per proc).",
-)
-parser.add_argument(
-    "--prompt",
-    default="",
-    type=str,
-    help="Prompt to use for generation. Defaults to empty string.",
-)
-
-
-def main():  
-    args, leftovers = parser.parse_known_args()
-    module = importlib.import_module(f"models.{args.model}")
-    model_args = {
-        leftovers[i].lstrip("-"): leftovers[i + 1] for i in range(0, len(leftovers), 2)
-    }
-    eval_model = module.EvalModel(model_args)
+    eval_model = EvalModel({
+                            "vision_encoder_path": configs['vision_encoder_path'],
+                            "vision_encoder_pretrained":  configs['vision_encoder_pretrained'],
+                            "lm_path":  configs['lm_path'],
+                            "lm_tokenizer_path":  configs['lm_tokenizer_path'],
+                            "checkpoint_path":  configs['checkpoint_path'],
+                            "cross_attn_every_n_layers":  configs['cross_attn_every_n_layers'],
+                            "precision":  configs['precision'],
+                            "device":  configs['device'],
+                            })
     
-    # set up distributed evaluation
-    args.local_rank, args.rank, args.world_size = world_info_from_env()
-    device_id = init_distributed_device(args)
-    eval_model.set_device(device_id)
-    eval_model.init_distributed()
+    eval_model.set_device(configs['device'])
 
-    if args.model != "open_flamingo" and args.shots != [0]:
-        raise ValueError("Only 0 shot eval is supported for non-open_flamingo models")
+    # load cached demonstration features for RICES
+    if configs['rices'] != 'NONE':
+        cached_features = torch.load(
+            f"{configs['rices']}/coco.pkl", map_location="cpu"
+        )
+    else:
+        cached_features = None
 
-    if len(args.trial_seeds) != args.num_trials:
-        raise ValueError("Number of trial seeds must be == number of trials.")
-
-    results = defaultdict(list)
+def evaluate_prompt(prompt="Output"):  
+    if eval_model is None:
+        init()
     
-    if args.eval_coco:
-        print("Evaluating on COCO...")
-
-        # load cached demonstration features for RICES
-        if args.cached_demonstration_features is not None:
-            cached_features = torch.load(
-                f"{args.cached_demonstration_features}/coco.pkl", map_location="cpu"
+    for shot in configs['shots']:
+        scores = []
+        for seed, trial in zip(configs['trial_seeds'], range(configs['num_trials'])):
+            cider_score = evaluate_captioning(
+                eval_model=eval_model,
+                num_shots=shot,
+                seed=seed,
+                dataset_name="coco",
+                cached_features=cached_features,
+                prompt=prompt,
             )
-        else:
-            cached_features = None
+        
+            print(f"Shots {shot} Trial {trial} CIDEr score: {cider_score}")
+            scores.append(cider_score)
 
-        for shot in args.shots:
-            scores = []
-            for seed, trial in zip(args.trial_seeds, range(args.num_trials)):
-                cider_score = evaluate_captioning(
-                    args,
-                    eval_model=eval_model,
-                    num_shots=shot,
-                    seed=seed,
-                    dataset_name="coco",
-                    cached_features=cached_features,
-                )
-                if args.rank == 0:
-                    print(f"Shots {shot} Trial {trial} CIDEr score: {cider_score}")
-                    scores.append(cider_score)
-
-            if args.rank == 0:
-                print(f"Shots {shot} Mean CIDEr score: {np.nanmean(scores)}")
-                results["coco"].append(
-                    {
-                        "shots": shot,
-                        "trials": scores,
-                        "mean": np.nanmean(scores),
-                        "stddev": np.nanstd(scores),
-                    }
-                )
-
-    if args.rank == 0 and args.results_file is not None:
-        with open(args.results_file, "w") as f:
-            json.dump(results, f)
+        print(f"Shots {shot} Mean CIDEr score: {np.nanmean(scores)}")
+        return np.nanmean(scores)
 
 
 def evaluate_captioning(
-    args: argparse.Namespace,
     eval_model: BaseEvalModel,
     seed: int = 42,
     min_generation_length: int = 0,
@@ -221,6 +89,7 @@ def evaluate_captioning(
     num_shots: int = 8,
     dataset_name: str = "coco",
     cached_features=None,
+    test_prompt="Output",
 ):
     """Evaluate a model on COCO dataset.
 
@@ -238,12 +107,11 @@ def evaluate_captioning(
         float: CIDEr score
 
     """
-    test_prompt = args.prompt
     
     if dataset_name == "coco":
-        image_train_dir_path = args.coco_train_image_dir_path
-        image_val_dir_path = args.coco_val_image_dir_path
-        annotations_path = args.coco_karpathy_json_path
+        image_train_dir_path = configs['coco_train_image_dir_path']
+        image_val_dir_path = configs['coco_val_image_dir_path']
+        annotations_path = configs['coco_karpathy_json_path']
     else:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
 
@@ -263,36 +131,34 @@ def evaluate_captioning(
         dataset_name=dataset_name,
     )
 
-    effective_num_shots = utils.compute_effective_num_shots(num_shots, args.model)
+    effective_num_shots = utils.compute_effective_num_shots(num_shots, 'open_flamingo')
 
     np.random.seed(seed)
     test_dataloader = utils.prepare_eval_samples(
         test_dataset,
-        args.num_samples if args.num_samples > 0 else len(test_dataset),
-        args.batch_size,
+        len(test_dataset),
+        batch_size=configs['batch_size'],
     )
 
-    if args.rices:
+    if configs['rices']:
         rices_dataset = RICES(
             train_dataset,
             eval_model.device,
-            args.batch_size,
+            batch_size=configs['batch_size'],
             cached_features=cached_features,
-            vision_encoder_path=args.rices_vision_encoder_path,
-            vision_encoder_pretrained=args.rices_vision_encoder_pretrained,
+            vision_encoder_path=configs['vision_encoder_path'],
+            vision_encoder_pretrained=configs['openai'],
         )
     else:
         # subset of the training set to sample context images from
-        query_set = utils.get_query_set(train_dataset, args.query_set_size)
+        query_set = utils.get_query_set(train_dataset, query_set_size=2048)
 
-    utils.random_seed(seed, args.rank)
     predictions = defaultdict()
     for batch in tqdm(
         test_dataloader,
         desc=f"Running inference {dataset_name.upper()}",
-        disable=args.rank != 0,
     ):
-        if args.rices:
+        if configs['rices']:
             batch_demo_samples = rices_dataset.find(batch["image"], effective_num_shots)
         else:
             batch_demo_samples = utils.sample_batch_demos_from_query_set(
@@ -339,12 +205,6 @@ def evaluate_captioning(
             }
 
     # all gather
-    all_predictions = [None for _ in range(args.world_size)]
-    torch.distributed.all_gather_object(all_predictions, predictions)  # list of dicts
-
-    if args.rank != 0:
-        return None
-
     all_predictions = {
         k: v for d in all_predictions for k, v in d.items()
     }  # merge dicts
@@ -365,15 +225,14 @@ def evaluate_captioning(
 
     metrics = compute_cider(
         result_path=results_path,
-        annotations_path=args.coco_annotations_json_path
-        if dataset_name == "coco"
-        else args.flickr_annotations_json_path,
+        annotations_path=configs['coco_annotations_json_path']
     )
 
     # delete the temporary file
     os.remove(results_path)
 
-    return metrics["CIDEr"] * 100.0
+    return metrics["CIDEr"]
 
 if __name__ == "__main__":
-    main()
+    init()
+    print(evaluate_prompt('Output'))

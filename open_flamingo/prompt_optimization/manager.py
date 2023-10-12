@@ -6,8 +6,15 @@ import os
 os.environ["MASTER_ADDR"] = 'localhost'
 os.environ["MASTER_PORT"] = '8888'
 
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'eval'))
+
+from scorer import evaluate_prompt
 from make_dataset import make_dataset
 import optimizer
+
+root = os.path.dirname(os.path.abspath(__file__))
+path = os.path.join(root, 'data')
 
 def get_args():
     parser = argparse.ArgumentParser(description='OpenFlamingo Prompt Optimization')
@@ -22,20 +29,7 @@ def get_args():
     parser.add_argument('--extra_information', action="store_true", help='Extra information of image in meta prompt')
 
 def get_score(prompt: str):
-    scorer_param = json.load(open('prompt_optimization\scorer_params.json'))
-    parameters = ['python', './eval/scorer.py', '--prompt', prompt]
-    for key, value in scorer_param.items():
-        if value != "NONE":
-            parameters.append(key)
-            parameters.append(str(value))
-
-    result = subprocess.run(parameters, capture_output=True)
-    score = 0
-
-    for line in result.stdout.splitlines():
-        if line.startswith(b"Mean CIDEr score: "):
-            score = float(line.split(b" ")[2:])
-            break
+    score = evaluate_prompt(prompt)
     return score
 
 def get_scores(prompts: list):
@@ -45,11 +39,11 @@ def get_scores(prompts: list):
     return scores
 
 def download_checkpoint():
-    if not os.path.exists('ckpt'):
-        os.mkdir('ckpt')
-    if not os.path.exists('ckpt/checkpoint.pt'):
+    if not os.path.exists(f'{path}/ckpt'):
+        os.mkdir(f'{path}/ckpt')
+    if not os.path.exists(f'{path}/ckpt/checkpoint.pt'):
         from huggingface_hub import hf_hub_download
-        hf_hub_download("openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct", "ckpt/checkpoint.pt")
+        hf_hub_download("openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct", "checkpoint.pt", local_dir=f'{path}/ckpt')
 
 def init():
     make_dataset()
@@ -83,7 +77,7 @@ def unit_test():
     print("Done")
 
 def main():
-    init()
+    #init()
     args = get_args()
     unit_test()
     #train(args)

@@ -30,9 +30,11 @@ def download_files():
         os.remove(f'{path}/train2014.zip')
 
 def make_split():
-    if not os.path.exists(f'prompt_optimization/data/prompt_train2014'):
-        os.mkdir(f'prompt_optimization/data/prompt_train2014')
-        prompt_karpathy_coco = json.load(open('prompt_optimization/data/prompt_karpathy_coco.json'))
+    root = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(root, 'data')
+    if not os.path.exists(f'{path}/prompt_train2014'):
+        os.mkdir(f'{path}/prompt_train2014')
+        prompt_karpathy_coco = json.load(open(f'{path}/prompt_karpathy_coco.json'))
         prompt_train_fileName = []
 
         for img in prompt_karpathy_coco['images']:
@@ -41,7 +43,7 @@ def make_split():
 
         # Transfer to new folder
         for fileName in prompt_train_fileName:
-            os.rename(f'prompt_optimization/data/train2014/{fileName}', f'prompt_optimization/data/prompt_train2014/{fileName}')
+            os.rename(f'{path}/train2014/{fileName}', f'{path}/prompt_train2014/{fileName}')
 
 def make_dataset():
     print("Downloading files...")
