@@ -6,8 +6,6 @@ import os
 os.environ["MASTER_ADDR"] = 'localhost'
 os.environ["MASTER_PORT"] = '8888'
 
-import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'eval'))
 
 from scorer import evaluate_prompt
 from make_dataset import make_dataset
