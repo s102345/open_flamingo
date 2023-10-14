@@ -6,7 +6,6 @@ import os
 os.environ["MASTER_ADDR"] = 'localhost'
 os.environ["MASTER_PORT"] = '8888'
 
-
 from scorer import evaluate_prompt
 from make_dataset import make_dataset
 import optimizer
@@ -23,6 +22,7 @@ def get_args():
     # Meta-prompt parameters
     #parser.add_argument('--example_number', type=int, default=3, help='Example amount in meta prompt')
     parser.add_argument('--example_rule', type=str, default="rices", help='The way of choosing other 2 example in meta prompt')
+    parser.add_argument('--caption_number', type=int, default=5, help='Caption amount of example in meta prompt')
     parser.add_argument('--maximum_score', type=int, default=-1, help='The maximum score given by scorer(Will be normalized)')
     parser.add_argument('--extra_information', action="store_true", help='Extra information of image in meta prompt')
 
@@ -75,9 +75,9 @@ def unit_test():
     print("Done")
 
 def main():
-    #init()
+    init()
     args = get_args()
-    unit_test()
+    #unit_test()
     #train(args)
 
 if __name__ == '__main__':

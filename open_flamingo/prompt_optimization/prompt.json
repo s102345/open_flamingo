@@ -1,0 +1,22 @@
+{
+    "meta-instruction": [
+        "I possess a collection of prompts, each accompanied by a score. These prompts are organized in descending order based on their scores. A higher score signifies superior quality.",
+        "To understand how to utilize your prompt, replace the <INS> token in each example with your chosen prompt. You'll be provided with two in-context examples containing the <IMG> token, supplementary details, and reference captions. Subsequently, you should interpret the <IMG> input along with the additional details and produce an output. Your prompt's effectiveness will be evaluated using the CIDEr metric, which gauges the resemblance between candidate captions and reference captions. Consequently, if your output captions achieve a higher score, it suggests that the image has been aptly described.",
+        "Craft a fresh prompt distinct from the previous ones, aiming for the highest score possible. Please enclose your prompt within square brackets."
+    ],
+    "solution-score pair": [
+        {
+            "Prompt": "A photo of",
+            "Score": 78.33
+        },
+        {
+            "Prompt": "Test",
+            "Score": 74.14
+        },
+        {
+            "Prompt": "Output",
+            "Score": 50
+        }
+    ],
+    "optimization task": []
+}

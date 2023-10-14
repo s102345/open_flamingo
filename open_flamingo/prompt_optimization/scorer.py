@@ -52,9 +52,9 @@ def init():
     eval_model.set_device(configs['device'])
 
     # load cached demonstration features for RICES
-    if configs['rices'] != 'NONE':
+    if configs['cached_demonstration_features'] != 'NONE':
         cached_features = torch.load(
-            f"{configs['rices']}/coco.pkl", map_location="cpu"
+            f"{configs['cached_demonstration_features']}/coco.pkl", map_location="cpu"
         )
     else:
         cached_features = None

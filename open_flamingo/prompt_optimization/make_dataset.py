@@ -16,6 +16,12 @@ def download_files():
         print("Downloading annotation file...")
         wget.download("https://huggingface.co/datasets/openflamingo/eval_benchmark/raw/main/mscoco_karpathy/annotations/captions_train2014.json", f'{path}/captions_train2014.json', bar=wget.bar_adaptive)
     
+    # Instances file
+    if not os.path.exists(f'{path}/instances_train2014.json'):
+        print("Downloading instance file...")
+        gdown.download('https://drive.google.com/uc?id=1qgM2MUu2qhaacy64Ifm15WVLs1NG_5LE&export=download', f'{path}/instances_train2014.json', quiet=False)
+
+
     # Karpathy splits with modification
     if not os.path.exists(f'{path}/prompt_karpathy_coco.json'):
         print("Downloading splits file...")
