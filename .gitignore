@@ -1,4 +1,6 @@
 *.jpg
+*.pt
+
 private.json
 
 wandb/

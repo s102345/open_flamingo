@@ -2,10 +2,10 @@ import wget, gdown, os
 import zipfile
 import json
 
-def download_files():
-    root = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(root, 'data')
+root = os.path.dirname(os.path.abspath(__file__))
+path = os.path.join(root, 'data')
 
+def download_files():
     if not os.path.exists(path):
         os.mkdir(path)
 
@@ -36,8 +36,6 @@ def download_files():
         os.remove(f'{path}/train2014.zip')
 
 def make_split():
-    root = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(root, 'data')
     if not os.path.exists(f'{path}/prompt_train2014'):
         os.mkdir(f'{path}/prompt_train2014')
         prompt_karpathy_coco = json.load(open(f'{path}/prompt_karpathy_coco.json'))

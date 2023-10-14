@@ -28,10 +28,36 @@ from open_flamingo.train.distributed import init_distributed_device, world_info_
 from models.open_flamingo import EvalModel
 
 root = os.path.dirname(os.path.abspath(__file__))
+path = os.path.join(root, 'data')
 
 eval_model = None
 cached_features = None
 configs = dict
+
+parser = argparse.ArgumentParser()
+
+# Distributed evaluation
+parser.add_argument(
+    "--dist-url",
+    default="env://",
+    type=str,
+    help="url used to set up distributed training",
+)
+parser.add_argument(
+    "--dist-backend", default="nccl", type=str, help="distributed backend"
+)
+parser.add_argument(
+    "--horovod",
+    default=False,
+    action="store_true",
+    help="Use horovod for distributed training.",
+)
+parser.add_argument(
+    "--no-set-device-rank",
+    default=False,
+    action="store_true",
+    help="Don't set device index from local rank (when CUDA_VISIBLE_DEVICES restricted to one per proc).",
+)
 
 def init():
     global eval_model, cached_features
@@ -49,7 +75,13 @@ def init():
                             "device":  configs['device'],
                             })
     
-    eval_model.set_device(configs['device'])
+    # set up distributed evaluation
+    args, _ = parser.parse_known_args()
+
+    args.local_rank, args.rank, args.world_size = world_info_from_env()
+    device_id = init_distributed_device(args)
+    eval_model.set_device(device_id)
+    eval_model.init_distributed()
 
     # load cached demonstration features for RICES
     if configs['cached_demonstration_features'] != 'NONE':
@@ -72,7 +104,7 @@ def evaluate_prompt(prompt="Output"):
                 seed=seed,
                 dataset_name="coco",
                 cached_features=cached_features,
-                prompt=prompt,
+                test_prompt=prompt,
             )
         
             print(f"Shots {shot} Trial {trial} CIDEr score: {cider_score}")
@@ -150,7 +182,7 @@ def evaluate_captioning(
             batch_size=configs['batch_size'],
             cached_features=cached_features,
             vision_encoder_path=configs['vision_encoder_path'],
-            vision_encoder_pretrained=configs['openai'],
+            vision_encoder_pretrained=configs['vision_encoder_pretrained'],
         )
     else:
         # subset of the training set to sample context images from

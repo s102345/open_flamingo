@@ -1,6 +1,7 @@
 import subprocess
 import json
 import argparse
+from pathlib import Path
 
 import os
 os.environ["MASTER_ADDR"] = 'localhost'
@@ -37,15 +38,26 @@ def get_scores(prompts: list):
     return scores
 
 def download_checkpoint():
-    if not os.path.exists(f'{path}/ckpt'):
-        os.mkdir(f'{path}/ckpt')
-    if not os.path.exists(f'{path}/ckpt/checkpoint.pt'):
+    print("Downloading checkpoint...")
+    if not os.path.exists(f'{path}/checkpoint.pt'):
         from huggingface_hub import hf_hub_download
-        hf_hub_download("openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct", "checkpoint.pt", local_dir=f'{path}/ckpt')
+        hf_hub_download("openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct", "checkpoint.pt", local_dir=path)
+
+def update_path():
+    #Update path to abs 
+    scorer_params = json.load(open(f'{root}\\scorer_params.json'))
+    scorer_params['checkpoint_path'] = os.path.join(path, 'checkpoint.pt')
+    scorer_params['coco_train_image_dir_path'] = f"{path}\\train2014"
+    scorer_params["coco_val_image_dir_path"] = f"{path}\\prompt_train2014"
+    scorer_params["coco_karpathy_json_path"] = f"{path}\\prompt_karpathy_coco.json"
+    scorer_params["coco_annotations_json_path"] = f"{path}\\captions_train2014.json"
+    json.dump(scorer_params, open(f'{root}/scorer_params.json', 'w'), indent=4)
 
 def init():
     make_dataset()
     download_checkpoint()
+    update_path()
+        
 
 def generate_solution(instruction_per_step=8):
     #TODO: Call GPT-4
@@ -77,6 +89,7 @@ def unit_test():
 def main():
     init()
     args = get_args()
+
     #unit_test()
     #train(args)
 
