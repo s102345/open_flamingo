@@ -21,5 +21,5 @@
     "coco_karpathy_json_path": "",
     "coco_annotations_json_path": "",
     "precision": "fp32",
-    "batch_size": 1
+    "batch_size": 2
 }

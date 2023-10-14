@@ -90,7 +90,7 @@ def main():
     init()
     args = get_args()
 
-    #unit_test()
+    unit_test()
     #train(args)
 
 if __name__ == '__main__':

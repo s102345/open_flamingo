@@ -59,7 +59,7 @@ parser.add_argument(
     help="Don't set device index from local rank (when CUDA_VISIBLE_DEVICES restricted to one per proc).",
 )
 
-def init():
+def init(args):
     global eval_model, cached_features
     global configs
     configs = json.load(open(f'{root}/scorer_params.json'))
@@ -75,10 +75,6 @@ def init():
                             "device":  configs['device'],
                             })
     
-    # set up distributed evaluation
-    args, _ = parser.parse_known_args()
-
-    args.local_rank, args.rank, args.world_size = world_info_from_env()
     device_id = init_distributed_device(args)
     eval_model.set_device(device_id)
     eval_model.init_distributed()
@@ -92,13 +88,18 @@ def init():
         cached_features = None
 
 def evaluate_prompt(prompt="Output"):  
+    # set up distributed evaluation
+    args, _ = parser.parse_known_args()
+    args.local_rank, args.rank, args.world_size = world_info_from_env()
+
     if eval_model is None:
-        init()
+        init(args)
     
     for shot in configs['shots']:
         scores = []
         for seed, trial in zip(configs['trial_seeds'], range(configs['num_trials'])):
             cider_score = evaluate_captioning(
+                args=args,
                 eval_model=eval_model,
                 num_shots=shot,
                 seed=seed,
@@ -115,6 +116,7 @@ def evaluate_prompt(prompt="Output"):
 
 
 def evaluate_captioning(
+    args: argparse.Namespace,
     eval_model: BaseEvalModel,
     seed: int = 42,
     min_generation_length: int = 0,
@@ -240,6 +242,12 @@ def evaluate_captioning(
             }
 
     # all gather
+    all_predictions = [None for _ in range(args.world_size)]
+    torch.distributed.all_gather_object(all_predictions, predictions)  # list of dicts
+
+    if args.rank != 0:
+        return None
+
     all_predictions = {
         k: v for d in all_predictions for k, v in d.items()
     }  # merge dicts
