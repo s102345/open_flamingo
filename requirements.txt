@@ -1,4 +1,3 @@
---extra-index-url
 einops
 einops-exts
 transformers>=4.28.1
