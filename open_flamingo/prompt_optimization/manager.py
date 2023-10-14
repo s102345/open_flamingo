@@ -80,7 +80,7 @@ def train(args):
 
 def unit_test():
     print("Unit test")
-    prompts = ["Output", "Depicting the scene of", "A Image of", "Capturing a moment of", "Describe the scene where", "Output", "Output", "Output"]
+    prompts = ["Output", "Depicting the scene of", "A Image of", "Output"]
     scores = get_scores(prompts)
     for score, prompt in zip(scores, prompts):
         print(f"Prompt: {prompt}, Score: {score}")
