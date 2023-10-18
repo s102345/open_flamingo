@@ -87,6 +87,12 @@ def init(args):
     else:
         cached_features = None
 
+def evaluate(prompt_list):
+    scores = []
+    for prompt in prompt_list:
+        scores.append(evaluate_prompt(prompt))
+    return scores
+
 def evaluate_prompt(prompt="Output"):  
     # set up distributed evaluation
     args, _ = parser.parse_known_args()

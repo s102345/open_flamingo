@@ -7,3 +7,4 @@ sentencepiece
 openai
 wandb
 wget
+clip-retrieval 

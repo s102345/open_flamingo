@@ -6,16 +6,12 @@
     ],
     "solution-score pair": [
         {
-            "Prompt": "A photo of",
-            "Score": 78.33
-        },
-        {
-            "Prompt": "Test",
-            "Score": 74.14
-        },
-        {
             "Prompt": "Output",
-            "Score": 50
+            "Score": 25.0
+        },
+        {
+            "Prompt": "Sand",
+            "Score": 17.5
         }
     ],
     "optimization task": []

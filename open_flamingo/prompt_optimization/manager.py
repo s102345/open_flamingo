@@ -7,8 +7,9 @@ import os
 os.environ["MASTER_ADDR"] = 'localhost'
 os.environ["MASTER_PORT"] = '8888'
 
-from scorer import evaluate_prompt
+from scorer import evaluate
 from make_dataset import make_dataset
+from meta_prompt import main as meta_prompt_main
 import optimizer
 
 root = os.path.dirname(os.path.abspath(__file__))
@@ -16,6 +17,7 @@ path = os.path.join(root, 'data')
 
 def get_args():
     parser = argparse.ArgumentParser(description='OpenFlamingo Prompt Optimization')
+    parser.add_argument('--output_dir', type=str, default="./", help='Output directory')
     # Training parameters
     parser.add_argument('--steps', type=int, default=200, help='Number of steps')
     parser.add_argument('--instruction_per_step', type=int, default=8, help='Instructions generated per step')
@@ -27,19 +29,9 @@ def get_args():
     parser.add_argument('--maximum_score', type=int, default=-1, help='The maximum score given by scorer(Will be normalized)')
     parser.add_argument('--extra_information', action="store_true", help='Extra information of image in meta prompt')
 
-def get_score(prompt: str):
-    score = evaluate_prompt(prompt)
-    return score
-
-def get_scores(prompts: list):
-    scores = []
-    for prompt in prompts:
-        scores.append(get_score(prompt))
-    return scores
-
 def download_checkpoint():
-    print("Downloading checkpoint...")
     if not os.path.exists(f'{path}/checkpoint.pt'):
+        print("Downloading checkpoint...")
         from huggingface_hub import hf_hub_download
         hf_hub_download("openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct", "checkpoint.pt", local_dir=path)
 
@@ -57,7 +49,8 @@ def init():
     make_dataset()
     download_checkpoint()
     update_path()
-        
+    if not os.path.exists(f'{root}/tmp'):
+        os.mkdir(f'{root}/tmp')
 
 def generate_solution(instruction_per_step=8):
     #TODO: Call GPT-4
@@ -73,7 +66,7 @@ def train(args):
         #Generate solutions
         solutions = generate_solution(args.instruction_per_step)
         #Get scores
-        scores = get_scores(solutions)
+        scores = evaluate(solutions)
         #Update meta-prompts
 
         break
@@ -81,7 +74,7 @@ def train(args):
 def unit_test():
     print("Unit test")
     prompts = ["Output", "A Image of", "Output"]
-    scores = get_scores(prompts)
+    scores = evaluate(prompts)
     for score, prompt in zip(scores, prompts):
         print(f"Prompt: {prompt}, Score: {score}")
     print("Done")
@@ -89,8 +82,8 @@ def unit_test():
 def main():
     init()
     args = get_args()
-
-    unit_test()
+    #meta_prompt_main(args)
+    #unit_test()
     #train(args)
 
 if __name__ == '__main__':
