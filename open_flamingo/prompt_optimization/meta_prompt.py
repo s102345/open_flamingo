@@ -4,34 +4,40 @@ import json
 import subprocess
 import sys
 import argparse
-import shutil
+import shutil, time
+from clip_filter import clip_filter
+from appdata import root, args
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'eval'))
 
-root = os.path.dirname(os.path.abspath(__file__))
-
-MAXIMUM_PAIR = 20
-
 annotations = None
 instances = None
-args = None
 
 def sample_image():
-    dataset = os.listdir(f'{root}/data/prompt_train2014')
+    used_images = json.loads(open(f'{root}/tmp/used_images.json', 'r').read())
+    dataset = [img for img in used_images.keys() if not used_images[img]]
+    if len(dataset) == 0:
+        init_used_images()
+        dataset = [img for img in used_images.keys() if not used_images[img]]
     image = random.choice(dataset)
-    return search_image_info(image)
+    return image
 
 def rices_image(query):
     if os.path.exists(f'{root}/tmp/rices'):
         shutil.rmtree(f'{root}/tmp/rices')
         os.mkdir(f'{root}/tmp/rices')
-
-    subprocess.run(["clip-retrieval", "filter", 
-                    "--query", query, 
-                    "--output_folder", f"{root}\\tmp\\rices",
-                    "--indice_folder", f"{root}\\data\\indexes",
-                    "--num_results", "2"])
-    print(os.listdir(f'{root}/tmp/rices'))
+    else:
+        os.mkdir(f'{root}/tmp/rices')
+    
+    clip_filter(query, f'{root}/tmp/rices', f'{root}/data/indexes', num_results=3, threshold=None)
+    
+    result = os.listdir(f'{root}/tmp/rices')
+    # Remove query image
+    if query.split('/')[-1] in result:
+        result.remove(query.split('/')[-1])
+    else:
+        result = result[:2]
+    return result
 
 def search_image_info(image_name):
     global annotations, instances
@@ -57,68 +63,149 @@ def search_image_info(image_name):
     target_cap = [sentence['raw'] for sentence in target_info['sentences']]
 
     # Translate categories id to categories name
-    target_cat = []
+    cat_dict = {cat['id']: cat['name'] for cat in instances['categories']}
+
+    target_cat = {}
     target_cat_tmp = []
     for cat_id in target_cat_id:
-        for cat in instances['categories']:
-            if cat['id'] == cat_id:
-                target_cat_tmp.append(cat['name']) # Gathering categories name
-    #Count
+        target_cat_tmp.append(cat_dict[cat_id])
+    
+    # Count
     for cat in list(set(target_cat_tmp)):
-        tmp = {cat : target_cat_tmp.count(cat)}
-        target_cat.append(tmp)
-
+        target_cat[cat] = target_cat_tmp.count(cat)
+    
     return {'Name': target_info['filename'], 'Captions': target_cap, 'Categories': target_cat}
-
+    
 def update_score_pair(pair: list):
     # Read old prompt
     old_pair = json.load(open(f'{root}/tmp/all_prompt.json', 'r'))
     # Merge new pair
     old_pair.extend(pair)   
-    keys = [p['Prompt'] for p in old_pair]
-    scores = [p['Score'] for p in old_pair]
-    
-    for i in range(len(keys)):
-        for j in range(i + 1, len(keys)):
-            # Count average score 
-            if keys[i] == keys[j]:
-                scores[i] = (scores[i] + scores[j]) / 2
-                scores[j] = scores[i]
+    pair_dict = {}
+    pair_count = {}
+    # Count showup times(for average)
+    for p in old_pair:
+        if p['Prompt'] not in pair_count:
+            pair_count[p['Prompt']] = 1
+        else:
+            pair_count[p['Prompt']] += 1
 
+    for p in old_pair:
+        if p['Prompt'] not in pair_dict:
+            pair_dict[p['Prompt']] = p['Score'] / pair_count[p['Prompt']]
+        else:
+            pair_dict[p['Prompt']] = pair_dict[p['Prompt']] + p['Score'] / pair_count[p['Prompt']]
+    
     new_pair = []
     record = set()
-    for key, score in zip(keys, scores):
+    for key, score in pair_dict.items():
         if key not in record:
             new_pair.append({'Prompt': key, 'Score': score})
             record.add(key)
 
     # Save pairs
-    sorted_pair = sorted(new_pair, key=lambda x: x['Score'], reverse=True)
+    sorted_pair = sorted(new_pair, key=lambda x: x['Score'])
     json.dump(sorted_pair, open(f'{root}/tmp/all_prompt.json', 'w'), indent=4)
 
     # Update meta-prompt
     prompt_file = json.load(open(f'{root}/prompt.json', 'r')) 
-    top_pair = sorted_pair[:MAXIMUM_PAIR]
+    top_pair = sorted_pair[:args.maximum_prompt_score_pair]
     prompt_file['solution-score pair'] = top_pair
     json.dump(prompt_file, open(f'{root}/prompt.json', 'w'), indent=4) 
 
 def update_optimization_task():
+    # Fetch info
+    tmp = []
+    task_examples = []
     target_img = sample_image()
-    print(target_img)
-    rices_image(f"{root}/data/prompt_train2014/{target_img['Name']}")
+    if args.example_rule == "rices":
+        tmp.extend(rices_image(f"{root}/data/prompt_train2014/{target_img}"))
+    else:
+        for i in range(2):
+            tmp.append(sample_image())
+    tmp.append(target_img)
+    used_record = json.load(open(f'{root}/tmp/used_images.json', 'r'))
+    for img in tmp: 
+        img_info = search_image_info(img)
+        task_examples.append({
+            'image': img_info['Name'],
+            'captions': img_info['Captions'],
+            'extra_info': img_info['Categories']
+        })
+        used_record[img_info['Name']] =  True
+    #Update to used 
+    json.dump(used_record, open(f'{root}/tmp/used_images.json', 'w'), indent=4)
+    # Save task
+    # Update meta-prompt
+    old_prompt = json.load(open(f'{root}/prompt.json', 'r'))
+    old_prompt['optimization task'] = task_examples
+    json.dump(old_prompt, open(f'{root}/prompt.json', 'w'), indent=4)
 
 def init():
     if not os.path.exists(f'{root}/tmp'):
         os.mkdir(f'{root}/tmp')
     json.dump([], open(f'{root}/tmp/all_prompt.json', 'w'), indent=4)
+    init_used_images()
+    random.seed(time.time())
+   
+def init_used_images():
+    img_record = {}
+    for img in os.listdir(f'{root}/data/prompt_train2014'):
+        img_record[img] = False
+    json.dump(img_record, open(f'{root}/tmp/used_images.json', 'w'), indent=4)
 
-def main(_args):
+
+def make_meta_prompt(_args, score_pair):
     global args
     args = _args
-    init()
-    update_score_pair([{'Prompt': 'Output', 'Score': 50}, {'Prompt': 'Output', 'Score': 10}, {'Prompt': 'Output', 'Score': 20}, {'Prompt': 'Sand', 'Score': 10}])
-    update_score_pair([{'Prompt': 'Sand', 'Score': 40}, {'Prompt': 'Sand', 'Score': 10}])
+    update_score_pair(score_pair)
     update_optimization_task()
+    prompt = json.load(open(f'{root}/prompt.json', 'r'))
+    meta_prompt = ""
+
+    # Comporse meta-prompt
+    meta_prompt += prompt["meta-instruction"][0]
+    meta_prompt += '\n\n'
+
+    # Prompt-Score pair
+    for pair in prompt['solution-score pair']:
+        meta_prompt += f"prompt: {pair['Prompt']}, score: {pair['Score']}\n"
+    meta_prompt += '\n'
+    meta_prompt += prompt["meta-instruction"][1]
+    meta_prompt += '\n\n'
+
+    # Optimization task
+    for i, task in enumerate(prompt['optimization task']):
+        if i == len(prompt['optimization task']) - 1:
+            meta_prompt += "Input: \n"
+        else:
+            meta_prompt += "In-context example:\n"
+
+        meta_prompt += "Q:\n"
+
+        if args.extra_information:
+            meta_prompt += f"<IMG>, with extra info: "
+            for info in task['extra_info']:
+                amount = task['extra_info'][info]
+                if info == list(task['extra_info'])[-1]:
+                    meta_prompt += f"{amount} {info}"
+                else:
+                    meta_prompt += f"{amount} {info}, "
+            meta_prompt += '\n'
+        else:
+            meta_prompt += f"<IMG>\n"
+
+        meta_prompt += 'A:\n'
+        for i, caption in enumerate(task['captions']):
+            if i == args.caption_number:
+                break
+            meta_prompt += f"<INS> {caption}\n"
+
+    meta_prompt += '\n'
+    meta_prompt += prompt["meta-instruction"][2]
+
+    print(meta_prompt)
+    return meta_prompt
 
 if __name__ == "__main__":
-    main(1)
+    make_meta_prompt(1, [{'Prompt': 'Output', 'Score': 50}, {'Prompt': 'Output', 'Score': 10}, {'Prompt': 'Output', 'Score': 20}, {'Prompt': 'Sand', 'Score': 10}])

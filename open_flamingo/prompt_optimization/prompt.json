@@ -6,13 +6,56 @@
     ],
     "solution-score pair": [
         {
-            "Prompt": "Output",
-            "Score": 25.0
+            "Prompt": "Sand",
+            "Score": 10.0
         },
         {
-            "Prompt": "Sand",
-            "Score": 17.5
+            "Prompt": "Output",
+            "Score": 30.0
         }
     ],
-    "optimization task": []
+    "optimization task": [
+        {
+            "image": "COCO_train2014_000000383330.jpg",
+            "captions": [
+                "A snowboarder riding his snowboard on a snow covered ground.",
+                "A blurry motion photo of a snowboarder doing a trick.",
+                "A snowboarder with a colorful board and dark outfit ",
+                "A person on a snowboard does a trick on a rail.",
+                "A man is grinding on his snowboard in full gear. "
+            ],
+            "extra_info": {
+                "snowboard": 1,
+                "person": 1
+            }
+        },
+        {
+            "image": "COCO_train2014_000000555265.jpg",
+            "captions": [
+                "Perfect form allows the skier to careen down the slope.",
+                "A skier racing down to the bottom of a hill.",
+                "A person with helmet and skis skiing on the snow",
+                "a person on skis goes down a snowy hill ",
+                "A person snow skiing down a hill while the hold their ski poles."
+            ],
+            "extra_info": {
+                "skis": 1,
+                "person": 1
+            }
+        },
+        {
+            "image": "COCO_train2014_000000177406.jpg",
+            "captions": [
+                "A person skiing down a mountain with snow.",
+                "A skier going down a snowy hill during the day.",
+                "A skier moving fast down a snow covered slope.",
+                "A woman skiing down a hill in the winter.",
+                "A competitive skier finishes a run at the bottom of a snowy hill."
+            ],
+            "extra_info": {
+                "skis": 1,
+                "person": 1
+            }
+        }
+    ]
 }

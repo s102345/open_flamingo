@@ -34,14 +34,13 @@ def download_files():
             zip_ref.extractall(f"{path}")
         os.remove(f'{path}/train2014.zip')
 
-    # Download the COCO2014 CLIP indexes
-    if not os.path.exists(f'{path}/prompt_train2014_indexes'):
-        print("Downloading MSCOCO 2014 CLIP indexes...")
-        gdown.download('https://drive.google.com/u/0/uc?id=1HyN0Lrr0dTNjtuKkH9GpKAxjU6rSw80a&export=download', f'{path}/prompt_train2014_indexes.zip', quiet=False)
-        with zipfile.ZipFile(f'{path}/prompt_train2014_indexes.zip',"r") as zip_ref:
+    # Download the rices indexes
+    if not os.path.exists(f'{path}/indexes'):
+        print("Downloading rices indexes...")
+        gdown.download('https://drive.google.com/u/0/uc?id=1HyN0Lrr0dTNjtuKkH9GpKAxjU6rSw80a&export=download', f'{path}/indexes.zip', quiet=False)
+        with zipfile.ZipFile(f'{path}/indexes.zip',"r") as zip_ref:
             zip_ref.extractall(f"{path}")
-        os.remove(f'{path}/prompt_train2014_indexes.zip')
-
+        os.remove(f'{path}/indexes.zip')
 
 def make_split():
     if not os.path.exists(f'{path}/prompt_train2014'):
