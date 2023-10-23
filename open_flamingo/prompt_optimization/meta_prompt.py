@@ -30,7 +30,7 @@ def rices_image(query):
     else:
         os.mkdir(f'{root}/tmp/rices')
     
-    clip_filter(query, f'{root}/tmp/rices', f'{root}/data/indexes', num_results=3, threshold=None)
+    clip_filter(query, f'{root}/tmp/rices', f'{root}/data/indexes', num_results=args.example_number, threshold=None)
     
     result = os.listdir(f'{root}/tmp/rices')
     # Remove query image
@@ -124,9 +124,10 @@ def update_optimization_task():
     if args.example_rule == "rices":
         tmp.extend(rices_image(f"{root}/data/prompt_train2014/{target_img}"))
     else:
-        for i in range(2):
+        for i in range(args.example_number - 1):
             tmp.append(sample_image())
     tmp.append(target_img)
+    # Update used images
     used_record = json.load(open(f'{root}/tmp/used_images.json', 'r'))
     for img in tmp: 
         img_info = search_image_info(img)
@@ -136,7 +137,6 @@ def update_optimization_task():
             'extra_info': img_info['Categories']
         })
         used_record[img_info['Name']] =  True
-    #Update to used 
     json.dump(used_record, open(f'{root}/tmp/used_images.json', 'w'), indent=4)
     # Save task
     # Update meta-prompt

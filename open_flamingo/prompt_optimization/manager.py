@@ -38,7 +38,7 @@ def get_args():
     parser.add_argument('--initial_prompt', type=str, default="Output", help='Initial prompt')
 
     # Meta-prompt parameters
-    #parser.add_argument('--example_number', type=int, default=3, help='Example amount in meta prompt')
+    parser.add_argument('--example_number', type=int, default=3, help='Example amount in meta prompt')
     parser.add_argument('--maximum_prompt_score_pair', type=int, default=20, help='Maximum number of prompt-score pair in meta prompt')
     parser.add_argument('--example_rule', type=str, default="rices", help='The way of choosing other 2 example in meta prompt')
     parser.add_argument('--caption_number', type=int, default=5, help='Caption amount of example in meta prompt')
