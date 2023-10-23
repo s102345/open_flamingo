@@ -6,12 +6,13 @@ import sys
 import argparse
 import shutil, time
 from clip_filter import clip_filter
-from appdata import root, args
+from appdata import root
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'eval'))
 
 annotations = None
 instances = None
+args = None
 
 def sample_image():
     used_images = json.loads(open(f'{root}/tmp/used_images.json', 'r').read())
@@ -77,6 +78,7 @@ def search_image_info(image_name):
     return {'Name': target_info['filename'], 'Captions': target_cap, 'Categories': target_cat}
     
 def update_score_pair(pair: list):
+    global args
     # Read old prompt
     old_pair = json.load(open(f'{root}/tmp/all_prompt.json', 'r'))
     # Merge new pair
@@ -114,6 +116,7 @@ def update_score_pair(pair: list):
     json.dump(prompt_file, open(f'{root}/prompt.json', 'w'), indent=4) 
 
 def update_optimization_task():
+    global args
     # Fetch info
     tmp = []
     task_examples = []
@@ -141,7 +144,9 @@ def update_optimization_task():
     old_prompt['optimization task'] = task_examples
     json.dump(old_prompt, open(f'{root}/prompt.json', 'w'), indent=4)
 
-def init():
+def init(_args):
+    global args 
+    args = _args
     if not os.path.exists(f'{root}/tmp'):
         os.mkdir(f'{root}/tmp')
     json.dump([], open(f'{root}/tmp/all_prompt.json', 'w'), indent=4)
@@ -154,12 +159,12 @@ def init_used_images():
         img_record[img] = False
     json.dump(img_record, open(f'{root}/tmp/used_images.json', 'w'), indent=4)
 
-
-def make_meta_prompt(_args, score_pair):
-    global args
-    args = _args
+def update_meta_prompt(score_pair):
     update_score_pair(score_pair)
     update_optimization_task()
+
+def make_meta_prompt():
+    global args
     prompt = json.load(open(f'{root}/prompt.json', 'r'))
     meta_prompt = ""
 
@@ -203,8 +208,6 @@ def make_meta_prompt(_args, score_pair):
 
     meta_prompt += '\n'
     meta_prompt += prompt["meta-instruction"][2]
-
-    print(meta_prompt)
     return meta_prompt
 
 if __name__ == "__main__":

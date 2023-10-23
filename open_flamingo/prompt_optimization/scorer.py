@@ -26,9 +26,7 @@ from open_flamingo.src.flamingo import Flamingo
 
 from open_flamingo.train.distributed import init_distributed_device, world_info_from_env
 from models.open_flamingo import EvalModel
-
-root = os.path.dirname(os.path.abspath(__file__))
-path = os.path.join(root, 'data')
+from appdata import root, path
 
 eval_model = None
 cached_features = None
@@ -75,9 +73,10 @@ def init(args):
                             "device":  configs['device'],
                             })
     
-    device_id = init_distributed_device(args)
-    eval_model.set_device(device_id)
-    eval_model.init_distributed()
+    if configs['is_distributed']:
+        device_id = init_distributed_device(args)
+        eval_model.set_device(device_id)
+        eval_model.init_distributed()
 
     # load cached demonstration features for RICES
     if configs['cached_demonstration_features'] != 'NONE':
@@ -248,9 +247,12 @@ def evaluate_captioning(
             }
 
     # all gather
-    all_predictions = [None for _ in range(args.world_size)]
-    torch.distributed.all_gather_object(all_predictions, predictions)  # list of dicts
-
+    if configs['is_distributed']:
+        all_predictions = [None for _ in range(args.world_size)]
+        torch.distributed.all_gather_object(all_predictions, predictions)  # list of dicts
+    else:
+        all_predictions = [predictions]
+        
     if args.rank != 0:
         return None
 

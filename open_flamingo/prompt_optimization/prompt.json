@@ -6,55 +6,95 @@
     ],
     "solution-score pair": [
         {
-            "Prompt": "Sand",
+            "Prompt": "A group of skiers enjoying the snowy mountain slopes",
+            "Score": 0.0
+        },
+        {
+            "Prompt": "Describe the actions and environment of the person/people in the winter setting",
             "Score": 10.0
         },
         {
-            "Prompt": "Output",
+            "Prompt": "Describe the snow sport activities and the surrounding environment in the image.",
+            "Score": 20.0
+        },
+        {
+            "Prompt": "Describe the activities, clothing, and environment related to winter sports in the image.",
             "Score": 30.0
+        },
+        {
+            "Prompt": "Describe the winter sports activities observed in the image.",
+            "Score": 40.0
+        },
+        {
+            "Prompt": "Describe the individuals, their actions, and the surrounding environment in the snowy landscape.",
+            "Score": 50.0
+        },
+        {
+            "Prompt": "Describe the individuals participating in winter sports in the given image, mentioning their activities, gear, and surrounding environment.",
+            "Score": 60.0
+        },
+        {
+            "Prompt": "Describe the winter activities, gear, and environment observed in the image.",
+            "Score": 70.0
+        },
+        {
+            "Prompt": "Output",
+            "Score": 70.52
         }
     ],
     "optimization task": [
         {
-            "image": "COCO_train2014_000000383330.jpg",
+            "image": "COCO_train2014_000000353663.jpg",
             "captions": [
-                "A snowboarder riding his snowboard on a snow covered ground.",
-                "A blurry motion photo of a snowboarder doing a trick.",
-                "A snowboarder with a colorful board and dark outfit ",
-                "A person on a snowboard does a trick on a rail.",
-                "A man is grinding on his snowboard in full gear. "
+                "A guy sitting with a skateboard in his lap adjusting kneepads.",
+                "A man that has a snowboard on his lap.",
+                "a man is messing with the foot attachments on a snow board ",
+                "A man in black shirt touching portions of a snowboard.",
+                "A man adjusting a pair of skis while sitting on a bed."
             ],
             "extra_info": {
+                "person": 1,
+                "couch": 1,
                 "snowboard": 1,
-                "person": 1
+                "remote": 2
             }
         },
         {
-            "image": "COCO_train2014_000000555265.jpg",
+            "image": "COCO_train2014_000000435091.jpg",
             "captions": [
-                "Perfect form allows the skier to careen down the slope.",
-                "A skier racing down to the bottom of a hill.",
-                "A person with helmet and skis skiing on the snow",
-                "a person on skis goes down a snowy hill ",
-                "A person snow skiing down a hill while the hold their ski poles."
+                "A woman smiles at a man who is wearing a colorful sarong.",
+                "Man and woman with group of scissors on table.",
+                "A shirtless man wearing a pink towel in the kitchen with a woman drinking wine.",
+                "Man dressed in a wrap in a personal kitchen.",
+                "A man in a pink sarong showing scissors to a woman with wine."
             ],
             "extra_info": {
-                "skis": 1,
-                "person": 1
+                "oven": 1,
+                "dining table": 1,
+                "scissors": 14,
+                "person": 2,
+                "wine glass": 1,
+                "cup": 11,
+                "bowl": 1,
+                "microwave": 1,
+                "sink": 2,
+                "bottle": 6
             }
         },
         {
-            "image": "COCO_train2014_000000177406.jpg",
+            "image": "COCO_train2014_000000045374.jpg",
             "captions": [
-                "A person skiing down a mountain with snow.",
-                "A skier going down a snowy hill during the day.",
-                "A skier moving fast down a snow covered slope.",
-                "A woman skiing down a hill in the winter.",
-                "A competitive skier finishes a run at the bottom of a snowy hill."
+                "Man using video game control in living area with decorated wall.",
+                "A boy is playing a video game on his television. ",
+                "A man that is standing in front of a television.",
+                "The young man is playing a video game.",
+                "A man standing in front of a flat screen TV."
             ],
             "extra_info": {
-                "skis": 1,
-                "person": 1
+                "laptop": 1,
+                "person": 1,
+                "tv": 1,
+                "remote": 2
             }
         }
     ]
