@@ -60,7 +60,7 @@ class Manager():
         self.scorer = Scorer()
         self.optimizer = Optimizer()
 
-        initial_score = 70.515#self.scorer.evaluate(args.initial_prompt)[0]
+        initial_score = self.scorer.evaluate(args.initial_prompt)[0]
         self.metaPromptGenerator = MetaPromptGenerator(self.args, self.make_prompt_score_pair([self.args.initial_prompt], [initial_score])) 
 
     def make_prompt_score_pair(self, solutions, scores):
@@ -81,7 +81,7 @@ class Manager():
                 sol = self.optimizer.generate(meta_prompt)
                 solutions.append(sol)
             # Use solutions to get scores
-            scores = [i * 10 for i in range(0, 8)]#self.scorer.evaluate(solutions)
+            scores = self.scorer.evaluate(solutions)
             prompt_score_pair = self.make_prompt_score_pair(solutions, scores)
             self.metaPromptGenerator.update_meta_prompt(prompt_score_pair)
 
