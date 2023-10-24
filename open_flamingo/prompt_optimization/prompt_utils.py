@@ -1,9 +1,9 @@
 import wget, gdown, os
 import zipfile
 import json
-
-root = os.path.dirname(os.path.abspath(__file__))
-path = os.path.join(root, 'data')
+from huggingface_hub import hf_hub_download
+import pandas as pd
+from appdata import root, path
 
 def download_files():
     if not os.path.exists(path):
@@ -63,5 +63,38 @@ def make_dataset():
     make_split()
     print("Done!")
 
-if __name__ == '__main__':
-    make_dataset()
+def download_checkpoint(model_name_or_path):
+    if not os.path.exists(f'{path}/checkpoint.pt'):
+        print("Downloading checkpoint...")
+        hf_hub_download(model_name_or_path, "checkpoint.pt", local_dir=path)
+
+def update_path():
+    #Update path to abs 
+    scorer_params = json.load(open(f'{root}/scorer_params.json'))
+    scorer_params['checkpoint_path'] = os.path.join(path, 'checkpoint.pt')
+    scorer_params['coco_train_image_dir_path'] = f"{path}/train2014"
+    scorer_params["coco_val_image_dir_path"] = f"{path}/prompt_train2014"
+    scorer_params["coco_karpathy_json_path"] = f"{path}/prompt_karpathy_coco.json"
+    scorer_params["coco_annotations_json_path"] = f"{path}/captions_train2014.json"
+    json.dump(scorer_params, open(f'{root}/scorer_params.json', 'w'), indent=4)
+
+def update_scorer_args(args):
+    params = json.load(open(f'{root}/scorer_params.json', 'r'))
+    params['shots'] = args.shots
+    params['num_trials'] = args.num_trials
+    params['cross_attn_every_n_layers'] = args.cross_attn_every_n_layers
+    params['rices'] = args.rices
+    params['lm_tokenizer_path'] = args.lm_tokenizer_path
+    params['lm_path'] = args.lm_path
+    params['is_distributed'] = args.is_distributed
+    json.dump(params, open(f'{root}/scorer_params.json', 'w'), indent=4)
+
+def rices_setup():
+    indice_folder = f'{path}/indexes'
+    images_path = f'{path}/prompt_train2014'
+    data_dir = indice_folder + "/metadata/metadata_0.parquet"
+    df = pd.read_parquet(data_dir)
+    df['image_path'] = df['image_path'].apply(lambda row: row.replace("/content/prompt_train2014", images_path))
+    df.to_parquet(data_dir)
+
+

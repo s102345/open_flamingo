@@ -1,7 +1,8 @@
 python ./open_flamingo/prompt_optimization/manager.py \
 --output_dir ./ \
---initial_prompt "Output" \
+--steps 10 \
 --shots 0 \
---windows \
+--caption_number 3 \
+--initial_prompt "Output" \
 --extra_information \
 
