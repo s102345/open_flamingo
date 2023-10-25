@@ -11,10 +11,21 @@ class MetaPromptGenerator():
         self.args = args
         random.seed(time.time())
         self.sampler = Sampler()
-        # Tmp of all prompt
+
         if not os.path.exists(f'{root}/tmp'):
             os.mkdir(f'{root}/tmp')
-        json.dump([], open(f'{root}/tmp/all_prompt.json', 'w'), indent=4)
+        
+        json.dump([], open(f'{root}/tmp/all_prompt.json', 'w'), indent=4) # Tmp of all prompt
+        default_meta_prompt = {
+            "meta-instruction": [
+                "I possess a collection of prompts, each accompanied by a score. These prompts are organized in descending order based on their scores. A higher score signifies superior quality.",
+                "To understand how to utilize your prompt, replace the <INS> token in each example with your chosen prompt. You'll be provided with two in-context examples containing the <IMG> token, supplementary details, and reference captions. Subsequently, you should interpret the <IMG> input along with the additional details and produce an output. Your prompt's effectiveness will be evaluated using the CIDEr metric, which gauges the resemblance between candidate captions and reference captions. Consequently, if your output captions achieve a higher score, it suggests that the image has been aptly described.",
+                "Craft a fresh prompt distinct from the previous ones, aiming for the highest score possible. Please enclose your prompt within square brackets."
+            ],
+            "solution-score pair": [],
+            "optimization task": []
+        }
+        json.dump(default_meta_prompt, open(f'{root}/tmp/meta_prompt.json', 'w'), indent=4) # Tmp of meta-prompt
         # Init meta-prompt
         self.update_meta_prompt(score_pair)
     
@@ -50,10 +61,10 @@ class MetaPromptGenerator():
         json.dump(sorted_pair, open(f'{root}/tmp/all_prompt.json', 'w'), indent=4)
 
         # Update meta-prompt
-        prompt_file = json.load(open(f'{root}/tmp/prompt.json', 'r')) 
+        prompt_file = json.load(open(f'{root}/tmp/meta_prompt.json', 'r')) 
         top_pair = sorted_pair[:self.args.maximum_prompt_score_pair]
         prompt_file['solution-score pair'] = top_pair
-        json.dump(prompt_file, open(f'{root}/tmp/prompt.json', 'w'), indent=4) 
+        json.dump(prompt_file, open(f'{root}/tmp/meta_prompt.json', 'w'), indent=4) 
 
     def update_optimization_task(self):
         # Fetch info
@@ -79,16 +90,16 @@ class MetaPromptGenerator():
         self.sampler.update_record(used_record)
         # Save task
         # Update meta-prompt
-        old_prompt = json.load(open(f'{root}/tmp/prompt.json', 'r'))
+        old_prompt = json.load(open(f'{root}/tmp/meta_prompt.json', 'r'))
         old_prompt['optimization task'] = task_examples
-        json.dump(old_prompt, open(f'{root}/tmp/prompt.json', 'w'), indent=4)
+        json.dump(old_prompt, open(f'{root}/tmp/meta_prompt.json', 'w'), indent=4)
 
     def update_meta_prompt(self, score_pair):
         self.update_score_pair(score_pair)
         self.update_optimization_task()
 
     def generate_meta_prompt(self):
-        prompt = json.load(open(f'{root}/tmp/prompt.json', 'r'))
+        prompt = json.load(open(f'{root}/tmp/meta_prompt.json', 'r'))
         meta_prompt = ""
 
         # Comporse meta-prompt
