@@ -53,7 +53,7 @@ class Scorer():
         self.args, _ = parser.parse_known_args()
         self.args.local_rank, self.args.rank, self.args.world_size = world_info_from_env()
 
-        self.configs = json.load(open(f'{root}/scorer_params.json'))
+        self.configs = json.load(open(f'{root}/config/scorer_params.json'))
 
         self.eval_model = EvalModel({
                             "vision_encoder_path": self.configs['vision_encoder_path'],

@@ -70,16 +70,16 @@ def download_checkpoint(model_name_or_path):
 
 def update_path():
     #Update path to abs 
-    scorer_params = json.load(open(f'{root}/scorer_params.json'))
+    scorer_params = json.load(open(f'{root}/config/scorer_params.json'))
     scorer_params['checkpoint_path'] = os.path.join(path, 'checkpoint.pt')
     scorer_params['coco_train_image_dir_path'] = f"{path}/train2014"
     scorer_params["coco_val_image_dir_path"] = f"{path}/prompt_train2014"
     scorer_params["coco_karpathy_json_path"] = f"{path}/prompt_karpathy_coco.json"
     scorer_params["coco_annotations_json_path"] = f"{path}/captions_train2014.json"
-    json.dump(scorer_params, open(f'{root}/scorer_params.json', 'w'), indent=4)
+    json.dump(scorer_params, open(f'{root}/config/scorer_params.json', 'w'), indent=4)
 
 def update_scorer_args(args):
-    params = json.load(open(f'{root}/scorer_params.json', 'r'))
+    params = json.load(open(f'{root}/config/scorer_params.json', 'r'))
     params['shots'] = args.shots
     params['num_trials'] = args.num_trials
     params['cross_attn_every_n_layers'] = args.cross_attn_every_n_layers
@@ -87,7 +87,7 @@ def update_scorer_args(args):
     params['lm_tokenizer_path'] = args.lm_tokenizer_path
     params['lm_path'] = args.lm_path
     params['is_distributed'] = args.is_distributed
-    json.dump(params, open(f'{root}/scorer_params.json', 'w'), indent=4)
+    json.dump(params, open(f'{root}/config/scorer_params.json', 'w'), indent=4)
 
 def rices_setup():
     indice_folder = f'{path}/indexes'
