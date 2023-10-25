@@ -22,9 +22,6 @@ def get_args():
     # Model parameters
     parser.add_argument('--model_name_or_path', type=str, default="openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct", help='Model name or path')
     parser.add_argument('--rices', action='store_true', help='Use rices to evaluate score or not')
-    parser.add_argument('--cached_demonstration_features', type=str, help='Cached demonstration features')
-    parser.add_argument('--precision', type=str, default='fp32', help='Precision')
-    parser.add_argument('--device', type=str, default='cuda:0', help='Device')
     parser.add_argument("--shots", nargs="+", default=[0, 4, 8, 16, 32], type=int)
     parser.add_argument("--num_trials", type=int, default=1, help="Number of trials to run for each shot using different demonstrations")
     parser.add_argument("--cross_attn_every_n_layers", type=int, default=1, help="Cross-attention every n layers")
