@@ -164,7 +164,7 @@ class Scorer():
         np.random.seed(seed)
         test_dataloader = utils.prepare_eval_samples(
             test_dataset,
-            len(test_dataset),
+            self.configs['num_samples'] if self.configs['num_samples'] > 0 else len(test_dataset),
             batch_size=self.configs['batch_size'],
         )
 
@@ -262,11 +262,11 @@ class Scorer():
 
         metrics = compute_cider(
             result_path=results_path,
-            annotations_path=args.coco_annotations_json_path
+            annotations_path=self.configs['coco_annotations_json_path']
         )
 
         # delete the temporary file
         os.remove(results_path)
-
+        print(metrics)
         return metrics["CIDEr"]
 

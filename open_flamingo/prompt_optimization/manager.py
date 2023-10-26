@@ -25,8 +25,8 @@ def get_args():
     parser.add_argument("--shots", nargs="+", default=[0, 4, 8, 16, 32], type=int)
     parser.add_argument("--num_trials", type=int, default=1, help="Number of trials to run for each shot using different demonstrations")
     parser.add_argument("--cross_attn_every_n_layers", type=int, default=1, help="Cross-attention every n layers")
-    parser.add_argument("--lm_path", type=str, default="anas-awadalla/mpt-1b-redpajama-200b", help="Path to LLM")
-    parser.add_argument("--lm_tokenizer_path", type=str, default="anas-awadalla/mpt-1b-redpajama-200b", help="Path to the tokenizer")
+    parser.add_argument("--lm_path", type=str, default="anas-awadalla/mpt-1b-redpajama-200b-dolly", help="Path to LLM")
+    parser.add_argument("--lm_tokenizer_path", type=str, default="anas-awadalla/mpt-1b-redpajama-200b-dolly", help="Path to the tokenizer")
 
     # Training parameters
     parser.add_argument('--steps', type=int, default=200, help='Number of steps')

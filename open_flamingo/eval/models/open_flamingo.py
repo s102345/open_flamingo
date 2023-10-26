@@ -324,8 +324,8 @@ class EvalModel(BaseEvalModel):
     def get_vqa_prompt(self, question, answer=None) -> str:
         return f"<image>Question:{question} Short answer:{answer if answer is not None else ''}{'<|endofchunk|>' if answer is not None else ''}"
 
-    def get_caption_prompt(self, prompt="Output", caption=None) -> str:
-        return f"<image>{prompt}:{caption if caption is not None else ''}{'<|endofchunk|>' if caption is not None else ''}"
+    def get_caption_prompt(self, prompt="Output:", caption=None) -> str:
+        return f"<image>{prompt}{caption if caption is not None else ''}{'<|endofchunk|>' if caption is not None else ''}"
 
     def get_imagenet_prompt(self, label=None) -> str:
         return f"<image>Output:{label if label is not None else ''}{'<|endofchunk|>' if label is not None else ''}"

@@ -25,9 +25,7 @@ class Sampler():
     def rices_image(self, query, example_number=3):
         if os.path.exists(f'{root}/tmp/rices'):
             shutil.rmtree(f'{root}/tmp/rices')
-            os.mkdir(f'{root}/tmp/rices')
-        else:
-            os.mkdir(f'{root}/tmp/rices')
+        os.mkdir(f'{root}/tmp/rices')
         
         clip_filter(query, f'{root}/tmp/rices', f'{root}/data/indexes', num_results=example_number, threshold=None)
         
