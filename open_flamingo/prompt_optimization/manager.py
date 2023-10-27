@@ -57,6 +57,7 @@ class Manager():
         self.scorer = Scorer()
         self.optimizer = Optimizer()
 
+        print("Evaluating initial prompt...")
         initial_score = self.scorer.evaluate(args.initial_prompt)[0]
         self.metaPromptGenerator = MetaPromptGenerator(self.args, self.make_prompt_score_pair([self.args.initial_prompt], [initial_score])) 
 

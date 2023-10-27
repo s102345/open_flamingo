@@ -10,6 +10,7 @@ class Optimizer():
         self.init()
         
     def init(self):
+        print("Optimizer initialized!")
         json.dump([], open(f'{root}/tmp/solutions.json', 'w'))
 
     def generate(self, meta_prompt):

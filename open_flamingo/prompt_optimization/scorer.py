@@ -49,6 +49,7 @@ parser.add_argument(
 
 class Scorer():
     def __init__(self):
+        print("Scorer initialized!")
         # set up distributed evaluation
         self.args, _ = parser.parse_known_args()
         self.args.local_rank, self.args.rank, self.args.world_size = world_info_from_env()
