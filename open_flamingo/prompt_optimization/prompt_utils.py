@@ -42,6 +42,12 @@ def download_files():
             zip_ref.extractall(f"{path}")
         os.remove(f'{path}/indexes.zip')
 
+    # Download the rices features
+    if not os.path.exists(f'{path}/RICES-features'):
+        os.mkdir(f'{path}/RICES-features')
+        print("Downloading rices features...")
+        gdown.download('https://drive.google.com/uc?id=1-5dr5JtSodLJzXADp7TETS_1kTooyOZE&export=download', f'{path}/RICES-features/coco.pkl', quiet=False)
+
 def make_split():
     if not os.path.exists(f'{path}/prompt_train2014'):
         os.mkdir(f'{path}/prompt_train2014')

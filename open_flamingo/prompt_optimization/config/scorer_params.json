@@ -7,7 +7,7 @@
     "device": "cuda:0",
     "cross_attn_every_n_layers": 1,
     "rices": false,
-    "cached_demonstration_features": "NONE",
+    "cached_demonstration_features": "./data/RICES-features",
     "num_samples": -1,
     "shots": [
         0

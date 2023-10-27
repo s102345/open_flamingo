@@ -1,0 +1,5 @@
+!git clone https://github.com/s102345/open_flamingo.git
+!cd open_flamingo
+!pip install -r requirements.txt
+!pip3 install openai wandb wget gdown clip-retrieval python-dotenv
+!sh ./open_flamingo/prompt_optimization/train.sh
