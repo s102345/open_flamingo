@@ -82,6 +82,7 @@ def update_path():
     scorer_params["coco_val_image_dir_path"] = f"{path}/prompt_train2014"
     scorer_params["coco_karpathy_json_path"] = f"{path}/prompt_karpathy_coco.json"
     scorer_params["coco_annotations_json_path"] = f"{path}/captions_train2014.json"
+    scorer_params["cached_demonstration_features"] = f"{path}/RICES-features/coco.pkl"
     json.dump(scorer_params, open(f'{root}/config/scorer_params.json', 'w'), indent=4)
 
 def update_scorer_args(args):
