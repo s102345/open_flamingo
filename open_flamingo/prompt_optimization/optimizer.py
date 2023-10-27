@@ -11,6 +11,8 @@ class Optimizer():
         
     def init(self):
         print("Optimizer initialized!")
+        if not os.path.exists(f'{root}/tmp'):
+            os.mkdir(f'{root}/tmp')
         json.dump([], open(f'{root}/tmp/solutions.json', 'w'))
 
     def generate(self, meta_prompt):
