@@ -17,7 +17,7 @@ class RICES:
     ):
         self.dataset = dataset
         self.device = device
-        self.batch_size = batch_size
+        self.batch_size = int(batch_size)
 
         # Load the model and processor
         vision_encoder, _, image_processor = open_clip.create_model_and_transforms(

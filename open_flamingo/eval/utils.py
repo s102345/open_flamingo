@@ -46,19 +46,26 @@ def get_query_set(train_dataset, query_set_size):
     return [train_dataset[i] for i in query_set]
 
 
-def prepare_eval_samples(test_dataset, num_samples, batch_size):
+def prepare_eval_samples(test_dataset, num_samples, batch_size, is_distributed=False):
     """
     Subset the test dataset and return a DataLoader.
     """
     random_indices = np.random.choice(len(test_dataset), num_samples, replace=False)
     dataset = torch.utils.data.Subset(test_dataset, random_indices)
-    #sampler = torch.utils.data.distributed.DistributedSampler(dataset)
-    loader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=batch_size,
-        #sampler=sampler,
-        collate_fn=custom_collate_fn,
-    )
+    if is_distributed:
+        sampler = torch.utils.data.distributed.DistributedSampler(dataset)
+        loader = torch.utils.data.DataLoader(
+            dataset,
+            batch_size=batch_size,
+            sampler=sampler,
+            collate_fn=custom_collate_fn,
+        )
+    else:
+        loader = torch.utils.data.DataLoader(
+            dataset,
+            batch_size=batch_size,
+            collate_fn=custom_collate_fn,
+        )
     return loader
 
 

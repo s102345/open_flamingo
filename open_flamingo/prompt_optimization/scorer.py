@@ -46,15 +46,22 @@ parser.add_argument(
     action="store_true",
     help="Don't set device index from local rank (when CUDA_VISIBLE_DEVICES restricted to one per proc).",
 )
+parser.add_argument(
+    "--device_map",
+    default="auto",
+    type=str
+)
+
 
 class Scorer():
     def __init__(self):
         print("Scorer initialized!")
+
+        self.configs = json.load(open(f'{root}/config/scorer_params.json'))
+
         # set up distributed evaluation
         self.args, _ = parser.parse_known_args()
         self.args.local_rank, self.args.rank, self.args.world_size = world_info_from_env()
-
-        self.configs = json.load(open(f'{root}/config/scorer_params.json'))
 
         self.eval_model = EvalModel({
                             "vision_encoder_path": self.configs['vision_encoder_path'],
@@ -78,7 +85,11 @@ class Scorer():
         if self.configs['is_distributed']:
             device_id = init_distributed_device(self.args)
             self.eval_model.set_device(device_id)
-            self.eval_model.init_distributed()
+
+            if device_id != torch.device("cpu") and self.args.world_size > 1:
+                self.eval_model.init_distributed()
+        else:
+            self.eval_model.set_device(self.configs['device'])
 
     def evaluate(self, prompt_list):
         scores = []
@@ -167,6 +178,7 @@ class Scorer():
             test_dataset,
             self.configs['num_samples'] if self.configs['num_samples'] > 0 else len(test_dataset),
             batch_size=self.configs['batch_size'],
+            is_distributed=self.configs['is_distributed']
         )
 
         if self.configs['rices']:
@@ -269,5 +281,5 @@ class Scorer():
         # delete the temporary file
         os.remove(results_path)
         print(metrics)
-        return metrics["CIDEr"]
+        return metrics["CIDEr"] * 100
 

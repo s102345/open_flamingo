@@ -4,6 +4,7 @@ Cache CLIP features for all images in training split in preparation for RICES
 import argparse
 import sys
 import os
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'eval'))
 
 sys.path.append(
     os.path.join(
