@@ -6,7 +6,7 @@ einops-exts
 transformers>=4.28.1
 pillow
 open_clip_torch>=2.16.0 
-torch==2.0.1+cu118
+torch==2.0.1
 sentencepiece
 #openai
 #wandb
