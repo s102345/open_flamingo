@@ -10,26 +10,27 @@ def download_files():
         os.mkdir(path)
 
     # Download the COCO dataset
+    file_links = json.load(open(f'{root}/config/file_links.json'))
 
     # Annotations file
     if not os.path.exists(f'{path}/captions_train2014.json'):
         print("Downloading annotation file...")
-        wget.download("https://huggingface.co/datasets/openflamingo/eval_benchmark/raw/main/mscoco_karpathy/annotations/captions_train2014.json", f'{path}/captions_train2014.json', bar=wget.bar_adaptive)
+        wget.download(file_links['captions_train2014'], f'{path}/captions_train2014.json', bar=wget.bar_adaptive)
     
     # Instances file
     if not os.path.exists(f'{path}/instances_train2014.json'):
         print("Downloading instance file...")
-        gdown.download('https://drive.google.com/uc?id=1qgM2MUu2qhaacy64Ifm15WVLs1NG_5LE&export=download', f'{path}/instances_train2014.json', quiet=False)
+        gdown.download(file_links['instances_train2014'], f'{path}/instances_train2014.json', quiet=False)
 
     # Karpathy splits with modification
     if not os.path.exists(f'{path}/prompt_karpathy_coco.json'):
         print("Downloading splits file...")
-        gdown.download('https://drive.google.com/u/3/uc?id=1WFzpbqHB7pH7KjPaJSKa0bk6Hzk5ztZF&export=download', f'{path}/prompt_karpathy_coco.json', quiet=False)
+        gdown.download(file_links['prompt_karpathy_coco'], f'{path}/prompt_karpathy_coco.json', quiet=False)
 
     # Download the COCO2014 dataset
     if not os.path.exists(f'{path}/train2014'):
         print("Downloading MSCOCO 2014 dataset...")
-        wget.download("http://images.cocodataset.org/zips/train2014.zip", f'{path}/train2014.zip', bar=wget.bar_adaptive)
+        wget.download(file_links['MSCOCO2014'], f'{path}/train2014.zip', bar=wget.bar_adaptive)
         with zipfile.ZipFile(f'{path}/train2014.zip',"r") as zip_ref:
             zip_ref.extractall(f"{path}")
         os.remove(f'{path}/train2014.zip')
@@ -37,7 +38,7 @@ def download_files():
     # Download the rices indexes
     if not os.path.exists(f'{path}/indexes'):
         print("Downloading rices indexes...")
-        gdown.download('https://drive.google.com/u/0/uc?id=1HyN0Lrr0dTNjtuKkH9GpKAxjU6rSw80a&export=download', f'{path}/indexes.zip', quiet=False)
+        gdown.download(file_links['rices_indexes'], f'{path}/indexes.zip', quiet=False)
         with zipfile.ZipFile(f'{path}/indexes.zip',"r") as zip_ref:
             zip_ref.extractall(f"{path}")
         os.remove(f'{path}/indexes.zip')
@@ -46,7 +47,7 @@ def download_files():
     if not os.path.exists(f'{path}/RICES-features'):
         os.mkdir(f'{path}/RICES-features')
         print("Downloading rices features...")
-        gdown.download('https://drive.google.com/uc?id=1-5dr5JtSodLJzXADp7TETS_1kTooyOZE&export=download', f'{path}/RICES-features/coco.pkl', quiet=False)
+        gdown.download(file_links['rices_features'], f'{path}/RICES-features/coco.pkl', quiet=False)
 
 def make_split():
     if not os.path.exists(f'{path}/prompt_train2014'):

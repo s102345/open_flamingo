@@ -18,9 +18,9 @@ class MetaPromptGenerator():
         json.dump([], open(f'{root}/tmp/all_prompt.json', 'w'), indent=4) # Tmp of all prompt
         default_meta_prompt = {
             "meta-instruction": [
-                "I possess a collection of prompts, each accompanied by a score. These prompts are organized in descending order based on their scores. A higher score signifies superior quality.",
-                "To understand how to utilize your prompt, replace the <INS> token in each example with your chosen prompt. You'll be provided with two in-context examples containing the <IMG> token, supplementary details, and reference captions. Subsequently, you should interpret the <IMG> input along with the additional details and produce an output. Your prompt's effectiveness will be evaluated using the CIDEr metric, which gauges the resemblance between candidate captions and reference captions. Consequently, if your output captions achieve a higher score, it suggests that the image has been aptly described.",
-                "Craft a fresh prompt distinct from the previous ones, aiming for the highest score possible. Please enclose your prompt within square brackets."
+                "I have provided several prompts, each paired with a score. These prompts are arranged in ascending order based on their scores. A higher score indicates better quality.",
+                "Below, you'll find images paired with captions. For each image, there's an <INS> tag in its corresponding caption. Your task is to replace the <INS> tag with appropriate content based on the provided details accompanying the image.",
+                "Please write a new prompt that is distinct from the ones provided. Aim for a score that's as high as possible. Do not generate image captions. When submitting your text, encase it in square brackets."
             ],
             "solution-score pair": [],
             "optimization task": []
@@ -67,31 +67,34 @@ class MetaPromptGenerator():
         json.dump(prompt_file, open(f'{root}/tmp/meta_prompt.json', 'w'), indent=4) 
 
     def update_optimization_task(self):
-        # Fetch info
-        tmp = []
-        task_examples = []
-        target_img = self.sampler.sample_image()
-        if self.args.example_rule == "rices":
-            tmp.extend(self.sampler.rices_image(f"{root}/data/prompt_train2014/{target_img}", self.args.example_number))
-        else:
-            for i in range(self.args.example_number - 1):
-                tmp.append(self.sampler.sample_image())
-        tmp.append(target_img)
-        # Update used images
-        used_record = []
-        for img in tmp: 
-            img_info = self.sampler.search_image_info(img)
-            task_examples.append({
-                'image': img_info['Name'],
-                'captions': img_info['Captions'],
-                'extra_info': img_info['Categories']
-            })
-            used_record.append(img_info['Name'])
-        self.sampler.update_record(used_record)
-        # Save task
-        # Update meta-prompt
         old_prompt = json.load(open(f'{root}/tmp/meta_prompt.json', 'r'))
-        old_prompt['optimization task'] = task_examples
+
+        # Fetch info
+        for i in range(self.args.optimization_task_number):
+            tmp = []
+            task_examples = []
+            target_img = self.sampler.sample_image()
+            if self.args.example_rule == "rices":
+                tmp.extend(self.sampler.rices_image(f"{root}/data/prompt_train2014/{target_img}", self.args.example_number))
+            else:
+                for i in range(self.args.example_number - 1):
+                    tmp.append(self.sampler.sample_image())
+            tmp.append(target_img)
+            # Update used images
+            used_record = []
+            for img in tmp: 
+                img_info = self.sampler.search_image_info(img)
+                task_examples.append({
+                    'image': img_info['Name'],
+                    'captions': img_info['Captions'],
+                    'extra_info': img_info['Categories']
+                })
+                used_record.append(img_info['Name'])
+            self.sampler.update_record(used_record)
+            # Save task
+            # Update meta-prompt
+            old_prompt['optimization task'].append(task_examples)
+        
         json.dump(old_prompt, open(f'{root}/tmp/meta_prompt.json', 'w'), indent=4)
 
     def update_meta_prompt(self, score_pair):
@@ -115,31 +118,31 @@ class MetaPromptGenerator():
 
         # Optimization task
         for i, task in enumerate(prompt['optimization task']):
-            if i == len(prompt['optimization task']) - 1:
-                meta_prompt += "Input: \n"
-            else:
-                meta_prompt += "In-context example:\n"
+            meta_prompt += "input: \n"
+            # Example in task
+            for j, task_examples in enumerate(task):
+                if self.args.extra_information:
+                    meta_prompt += "<IMG> {additional information: "
+                    for info in task_examples['extra_info']:
+                        amount = task_examples['extra_info'][info]
+                        if info == list(task_examples['extra_info'])[-1]:
+                            meta_prompt += f"{amount} {info}"
+                        else:
+                            meta_prompt += f"{amount} {info}, "
+                    meta_prompt += "}\n"
+                else:
+                    meta_prompt += f"<IMG>\n"
 
-            meta_prompt += "Q:\n"
+                choosed_caption = random.choice(task_examples['captions'])
 
-            if self.args.extra_information:
-                meta_prompt += f"<IMG>, with extra info: "
-                for info in task['extra_info']:
-                    amount = task['extra_info'][info]
-                    if info == list(task['extra_info'])[-1]:
-                        meta_prompt += f"{amount} {info}"
-                    else:
-                        meta_prompt += f"{amount} {info}, "
-                meta_prompt += '\n'
-            else:
-                meta_prompt += f"<IMG>\n"
-
-            meta_prompt += 'A:\n'
-
-            choosed_caption = random.choice(task['captions'], self.args.caption_number)
-            for i, caption in enumerate(choosed_caption):
-                meta_prompt += f"<INS> {caption}\n"
+                if j == len(task) - 1:
+                    meta_prompt += "<INS>\n"
+                    meta_prompt += f"output: {choosed_caption}\n"
+                else:
+                    meta_prompt += f"<INS> {choosed_caption}\n"
 
         meta_prompt += '\n'
         meta_prompt += prompt["meta-instruction"][2]
+        print(meta_prompt)
         return meta_prompt
+    

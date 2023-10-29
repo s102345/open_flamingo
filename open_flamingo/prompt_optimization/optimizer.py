@@ -19,6 +19,7 @@ class Optimizer():
         messages = [
             {"role": "system", "content": meta_prompt},
         ]
+
         past_solution = json.load(open(f'{root}/tmp/solutions.json', 'r'))
 
         for solution in past_solution:

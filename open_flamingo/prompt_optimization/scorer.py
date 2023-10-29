@@ -46,11 +46,6 @@ parser.add_argument(
     action="store_true",
     help="Don't set device index from local rank (when CUDA_VISIBLE_DEVICES restricted to one per proc).",
 )
-parser.add_argument(
-    "--device_map",
-    default="auto",
-    type=str
-)
 
 
 class Scorer():

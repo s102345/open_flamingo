@@ -34,11 +34,12 @@ def get_args():
     parser.add_argument('--initial_prompt', type=str, default="Output", help='Initial prompt')
 
     # Meta-prompt parameters
-    parser.add_argument('--example_number', type=int, default=3, help='Example amount in meta prompt')
+    parser.add_argument('--optimization_task_number', type=int, default=3, help='Amount of optimization tasks in meta prompt')
+    parser.add_argument('--example_number', type=int, default=3, help='Example amount in each optimization task')
     parser.add_argument('--maximum_prompt_score_pair', type=int, default=20, help='Maximum number of prompt-score pair in meta prompt')
-    parser.add_argument('--example_rule', type=str, default="rices", help='The way of choosing other 2 example in meta prompt')
-    parser.add_argument('--caption_number', type=int, default=5, help='Caption amount of example in meta prompt')
-    parser.add_argument('--extra_information', action="store_true", help='Extra information of image in meta prompt')
+    parser.add_argument('--example_rule', type=str, default="rices", help='The way of choosing other examples in each optimization task')
+    #parser.add_argument('--caption_number', type=int, default=1, help='Caption amount of example in meta prompt')
+    parser.add_argument('--extra_information', default=True, action="store_true", help='Extra information of image in meta prompt')
     parser.add_argument('--round_off', type=int, default=2, help='Round off score in meta prompt')
 
     return parser.parse_args()
@@ -54,11 +55,11 @@ class Manager():
         prompt_utils.update_scorer_args(self.args)
         prompt_utils.rices_setup()
 
-        self.scorer = Scorer()
-        self.optimizer = Optimizer()
+        #self.scorer = Scorer()
+        #self.optimizer = Optimizer()
 
         print("Evaluating initial prompt...")
-        initial_score = self.scorer.evaluate(args.initial_prompt)[0]
+        initial_score = 80 #self.scorer.evaluate(args.initial_prompt)[0]
         self.metaPromptGenerator = MetaPromptGenerator(self.args, self.make_prompt_score_pair([self.args.initial_prompt], [initial_score])) 
 
     def make_prompt_score_pair(self, solutions, scores):
@@ -79,7 +80,7 @@ class Manager():
                 sol = self.optimizer.generate(meta_prompt)
                 solutions.append(sol)
             # Use solutions to get scores
-            scores = self.scorer.evaluate(solutions)
+            scores = [10, 20, 30, 40 ,50 ,60, 70, 80]#self.scorer.evaluate(solutions)
             prompt_score_pair = self.make_prompt_score_pair(solutions, scores)
             self.metaPromptGenerator.update_meta_prompt(prompt_score_pair)
 
