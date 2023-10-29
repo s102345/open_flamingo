@@ -55,11 +55,11 @@ class Manager():
         prompt_utils.update_scorer_args(self.args)
         prompt_utils.rices_setup()
 
-        #self.scorer = Scorer()
-        #self.optimizer = Optimizer()
+        self.scorer = Scorer()
+        self.optimizer = Optimizer()
 
         print("Evaluating initial prompt...")
-        initial_score = 80 #self.scorer.evaluate(args.initial_prompt)[0]
+        initial_score = self.scorer.evaluate(args.initial_prompt)[0]
         self.metaPromptGenerator = MetaPromptGenerator(self.args, self.make_prompt_score_pair([self.args.initial_prompt], [initial_score])) 
 
     def make_prompt_score_pair(self, solutions, scores):
@@ -80,7 +80,7 @@ class Manager():
                 sol = self.optimizer.generate(meta_prompt)
                 solutions.append(sol)
             # Use solutions to get scores
-            scores = [10, 20, 30, 40 ,50 ,60, 70, 80]#self.scorer.evaluate(solutions)
+            scores = self.scorer.evaluate(solutions)
             prompt_score_pair = self.make_prompt_score_pair(solutions, scores)
             self.metaPromptGenerator.update_meta_prompt(prompt_score_pair)
 
