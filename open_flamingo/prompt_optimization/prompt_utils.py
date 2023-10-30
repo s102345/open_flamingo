@@ -73,7 +73,8 @@ def make_dataset():
 def download_checkpoint(model_name_or_path):
     if not os.path.exists(f'{path}/{model_name_or_path}.pt'):
         print("Downloading checkpoint...")
-        hf_hub_download(model_name_or_path, "checkpoint.pt", filename=f"{model_name_or_path}.pt",local_dir=path)
+        hf_hub_download(model_name_or_path, "checkpoint.pt",local_dir=path)
+        os.rename(f'{path}/checkpoint.pt', f'{path}/{model_name_or_path}.pt')
 
 def update_path(model_name_or_path):
     #Update path to abs 
