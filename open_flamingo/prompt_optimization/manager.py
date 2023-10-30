@@ -55,7 +55,7 @@ class Manager():
         print("Initializing...")
         prompt_utils.make_dataset()
         prompt_utils.download_checkpoint(self.args.model_name_or_path)
-        prompt_utils.update_path()
+        prompt_utils.update_path(self.args.model_name_or_path)
         prompt_utils.update_scorer_args(self.args)
         prompt_utils.rices_setup()
 

@@ -71,14 +71,14 @@ def make_dataset():
     print("Done!")
 
 def download_checkpoint(model_name_or_path):
-    if not os.path.exists(f'{path}/checkpoint.pt'):
+    if not os.path.exists(f'{path}/{model_name_or_path}.pt'):
         print("Downloading checkpoint...")
-        hf_hub_download(model_name_or_path, "checkpoint.pt", local_dir=path)
+        hf_hub_download(model_name_or_path, f"{model_name_or_path}.pt", local_dir=path)
 
-def update_path():
+def update_path(model_name_or_path):
     #Update path to abs 
     scorer_params = json.load(open(f'{root}/config/scorer_params.json'))
-    scorer_params['checkpoint_path'] = os.path.join(path, 'checkpoint.pt')
+    scorer_params['checkpoint_path'] = os.path.join(path, f'{model_name_or_path}.pt')
     scorer_params['coco_train_image_dir_path'] = f"{path}/train2014"
     scorer_params["coco_val_image_dir_path"] = f"{path}/prompt_train2014"
     scorer_params["coco_karpathy_json_path"] = f"{path}/prompt_karpathy_coco.json"
