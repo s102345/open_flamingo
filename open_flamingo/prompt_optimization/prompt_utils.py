@@ -71,9 +71,9 @@ def make_dataset():
     print("Done!")
 
 def download_checkpoint(model_name_or_path):
-    if not os.path.exists(f'{path}/{model_name_or_path}.pt'):
+    if not os.path.exists(f'{path}/openflamingo/{model_name_or_path}.pt'):
         print("Downloading checkpoint...")
-        hf_hub_download(model_name_or_path, "checkpoint.pt",local_dir=path)
+        hf_hub_download(f"openflamingo/{model_name_or_path}", "checkpoint.pt", local_dir=path)
         os.rename(f'{path}/checkpoint.pt', f'{path}/{model_name_or_path}.pt')
 
 def update_path(model_name_or_path):
