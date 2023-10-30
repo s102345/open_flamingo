@@ -9,13 +9,17 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'eval')
 class MetaPromptGenerator():
     def __init__(self, args, score_pair):
         self.args = args
-        random.seed(time.time())
-        self.sampler = Sampler()
+        if self.args.seed != None:
+            random.seed(args.seed)
+        else:
+            random.seed(time.time())
+        self.sampler = Sampler(self.args.seed)
 
         if not os.path.exists(f'{root}/tmp'):
             os.mkdir(f'{root}/tmp')
         
-        json.dump([], open(f'{root}/tmp/all_prompt.json', 'w'), indent=4) # Tmp of all prompt
+        json.dump([], open(f'{root}/tmp/old_pair.json', 'w'), indent=4) # Tmp of old pairs
+        json.dump([], open(f'{root}/tmp/all_prompt.json', 'w'), indent=4) # Tmp of all prompts
         default_meta_prompt = {
             "meta-instruction": [
                 "I have provided several prompts, each paired with a score. These prompts are arranged in ascending order based on their scores. A higher score indicates better quality.",
@@ -31,7 +35,7 @@ class MetaPromptGenerator():
     
     def update_score_pair(self, pair: list):
         # Read old prompt
-        old_pair = json.load(open(f'{root}/tmp/all_prompt.json', 'r'))
+        old_pair = json.load(open(f'{root}/tmp/old_pair.json', 'r'))
         # Merge new pair
         old_pair.extend(pair)   
         pair_dict = {}
@@ -58,13 +62,19 @@ class MetaPromptGenerator():
 
         # Save pairs
         sorted_pair = sorted(new_pair, key=lambda x: x['Score'])
-        json.dump(sorted_pair, open(f'{root}/tmp/all_prompt.json', 'w'), indent=4)
+        json.dump(sorted_pair, open(f'{root}/tmp/old_pair.json', 'w'), indent=4)
 
         # Update meta-prompt
         prompt_file = json.load(open(f'{root}/tmp/meta_prompt.json', 'r')) 
-        top_pair = sorted_pair[:self.args.maximum_prompt_score_pair]
+        start_point = len(sorted_pair) - self.args.maximum_prompt_score_pair
+        top_pair = sorted_pair[start_point if start_point > 0 else 0:]
         prompt_file['solution-score pair'] = top_pair
         json.dump(prompt_file, open(f'{root}/tmp/meta_prompt.json', 'w'), indent=4) 
+
+        # Save all prompts
+        all_prompt = json.load(open(f'{root}/tmp/all_prompt.json', 'r'))
+        all_prompt.append(pair)
+        json.dump(all_prompt, open(f'{root}/tmp/all_prompt.json', 'w'), indent=4)
 
     def update_optimization_task(self):
         old_prompt = json.load(open(f'{root}/tmp/meta_prompt.json', 'r'))
@@ -143,6 +153,8 @@ class MetaPromptGenerator():
 
         meta_prompt += '\n'
         meta_prompt += prompt["meta-instruction"][2]
-        print(meta_prompt)
         return meta_prompt
-    
+
+    def get_top_pairs(self):
+        meta_prompt = json.load(open(f'{root}/tmp/meta_prompt.json', 'r'))
+        return meta_prompt['solution-score pair'] 

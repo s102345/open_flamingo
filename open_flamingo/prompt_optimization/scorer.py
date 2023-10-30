@@ -80,9 +80,7 @@ class Scorer():
         if self.configs['is_distributed']:
             device_id = init_distributed_device(self.args)
             self.eval_model.set_device(device_id)
-
-            if device_id != torch.device("cpu") and self.args.world_size > 1:
-                self.eval_model.init_distributed()
+            self.eval_model.init_distributed()
         else:
             self.eval_model.set_device(self.configs['device'])
 

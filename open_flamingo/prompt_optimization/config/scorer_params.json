@@ -6,15 +6,11 @@
     "checkpoint_path": "C:\\Users\\Xuan\\Desktop\\Program\\open_flamingo\\open_flamingo\\prompt_optimization\\data\\checkpoint.pt",
     "device": "cuda:0",
     "cross_attn_every_n_layers": 1,
-    "rices": false,
+    "rices": true,
     "cached_demonstration_features": "C:\\Users\\Xuan\\Desktop\\Program\\open_flamingo\\open_flamingo\\prompt_optimization\\data/RICES-features",
     "num_samples": -1,
     "shots": [
-        0,
-        4,
-        8,
-        16,
-        32
+        4
     ],
     "num_trials": 1,
     "trial_seeds": [

@@ -4,13 +4,15 @@ import argparse
 
 import os
 os.environ["MASTER_ADDR"] = 'localhost'
-os.environ["MASTER_PORT"] = '8888'
+os.environ["MASTER_PORT"] = '29500'
 
 from scorer import Scorer
 import prompt_utils 
 from meta_prompt import MetaPromptGenerator
 from optimizer import Optimizer
 from appdata import root, path
+import wandb
+from statistics import mean
 
 def get_args():
     parser = argparse.ArgumentParser(description='OpenFlamingo Prompt Optimization')
@@ -18,6 +20,8 @@ def get_args():
     # General parameters
     parser.add_argument('--output_dir', type=str, default="./", help='Output directory')
     parser.add_argument('--is_distributed', action='store_true', help='If execute on Windows platform, set this to False')
+    parser.add_argument('--seed', default=None, type=int, help='Random seed')
+    parser.add_argument('--detailed_log', type=int, default=-1, help='Output detailed prompt or not')
 
     # Model parameters
     parser.add_argument('--model_name_or_path', type=str, default="openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct", help='Model name or path')
@@ -58,9 +62,28 @@ class Manager():
         self.scorer = Scorer()
         self.optimizer = Optimizer()
 
+        #Log
+        wandb.init(project="open-flamingo")
+        config = {
+            "scorer_model": self.args.model_name_or_path,
+            "scorer_rices": self.args.rices,
+            "scorer_shots": self.args.shots,
+            "scorer_num_trials": self.args.num_trials,
+            "steps": self.args.steps,
+            "instruction_per_step": self.args.instruction_per_step,
+            "initial_prompt": self.args.initial_prompt,
+            "optimization_task_number": self.args.optimization_task_number,
+            "example_number": self.args.example_number,
+            "maximum_prompt_score_pair": self.args.maximum_prompt_score_pair,
+            "example_rule": self.args.example_rule,
+            "extra_information": self.args.extra_information
+        }
+        wandb.config.update(config)
+
         print("Evaluating initial prompt...")
         initial_score = self.scorer.evaluate(args.initial_prompt)[0]
         self.metaPromptGenerator = MetaPromptGenerator(self.args, self.make_prompt_score_pair([self.args.initial_prompt], [initial_score])) 
+        wandb.log({"CIDEr": initial_score})
 
     def make_prompt_score_pair(self, solutions, scores):
         prompt_score_pair = []
@@ -69,7 +92,7 @@ class Manager():
         return prompt_score_pair
     
     def train(self):
-        for i in range(self.args.steps):
+        for i in range(1, self.args.steps + 1):
             # LOOP
             # Receive meta-prompt
             meta_prompt = self.metaPromptGenerator.generate_meta_prompt()
@@ -84,10 +107,30 @@ class Manager():
             prompt_score_pair = self.make_prompt_score_pair(solutions, scores)
             self.metaPromptGenerator.update_meta_prompt(prompt_score_pair)
 
+            # Log
+            wandb.log({"CIDEr": mean(scores)})
+            self.update_prompt_log()
+
+    def update_prompt_log(self):
+        all_prompt = json.load(open(f'{root}/tmp/all_prompt.json', 'r'))
+        data = []
+        for step, prompts in enumerate(all_prompt):
+            for prompt in prompts:
+                data.append([step, prompt['Score']])
+
+        table = wandb.Table(data=data, columns = ["step", "score"])
+        scatter = wandb.plot.scatter(table, "step", "score", title="Scatter Plot")
+        wandb.log({"scatter_plot": scatter})
+        
+
 def main():
     args = get_args()
     manager = Manager(args)
     manager.train()
+    # End training
+    top_pairs = manager.metaPromptGenerator.get_top_pairs()
+    json.dump(top_pairs, open(f'{args.output_dir}/top_pairs.json', 'w'), indent=4)
+    print("Done!")
 
 if __name__ == '__main__':
     main()

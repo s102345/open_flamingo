@@ -1,16 +1,13 @@
 -i https://download.pytorch.org/whl/cu118
-#open-flamingo 
-#open-flamingo[eval]
 einops
 einops-exts
 transformers>=4.28.1
 pillow
 open_clip_torch>=2.16.0 
 torch==2.0.1+cu118
-torch-tensorrt
-torchdata
-torchtext
 sentencepiece
+#open-flamingo 
+#open-flamingo[eval]
 #openai
 #wandb
 #wget

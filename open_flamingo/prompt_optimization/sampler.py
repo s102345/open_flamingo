@@ -3,8 +3,11 @@ from appdata import root
 import os, json, random, shutil, time
 
 class Sampler():
-    def __init__(self):
-        random.seed(time.time())
+    def __init__(self, seed=None):
+        if seed != None:
+            random.seed(seed)
+        else:
+            random.seed(time.time())
         self.init_used_images()
         
     def init_used_images(self):
