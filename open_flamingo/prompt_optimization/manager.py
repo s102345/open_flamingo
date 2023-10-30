@@ -27,6 +27,7 @@ def get_args():
     parser.add_argument('--model_name_or_path', type=str, default="openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct", help='Model name or path')
     parser.add_argument('--rices', action='store_true', help='Use rices to evaluate score or not')
     parser.add_argument("--shots", nargs="+", default=[0, 4, 8, 16, 32], type=int)
+    parser.add_argument("--num_samples", type=int, default=-1, help="Number of samples to evaluate on. -1 for all samples.")
     parser.add_argument("--num_trials", type=int, default=1, help="Number of trials to run for each shot using different demonstrations")
     parser.add_argument("--cross_attn_every_n_layers", type=int, default=1, help="Cross-attention every n layers")
     parser.add_argument("--lm_path", type=str, default="anas-awadalla/mpt-1b-redpajama-200b-dolly", help="Path to LLM")
@@ -69,6 +70,7 @@ class Manager():
             "scorer_rices": self.args.rices,
             "scorer_shots": self.args.shots,
             "scorer_num_trials": self.args.num_trials,
+            "scorer_num_samples": self.args.num_samples,
             "steps": self.args.steps,
             "instruction_per_step": self.args.instruction_per_step,
             "initial_prompt": self.args.initial_prompt,
@@ -76,7 +78,7 @@ class Manager():
             "example_number": self.args.example_number,
             "maximum_prompt_score_pair": self.args.maximum_prompt_score_pair,
             "example_rule": self.args.example_rule,
-            "extra_information": self.args.extra_information
+            "extra_information": self.args.extra_information,
         }
         wandb.config.update(config)
 

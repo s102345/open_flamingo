@@ -95,6 +95,7 @@ def update_scorer_args(args):
     params['lm_tokenizer_path'] = args.lm_tokenizer_path
     params['lm_path'] = args.lm_path
     params['is_distributed'] = args.is_distributed
+    params['num_samples'] = args.num_samples
     json.dump(params, open(f'{root}/config/scorer_params.json', 'w'), indent=4)
 
 def rices_setup():
