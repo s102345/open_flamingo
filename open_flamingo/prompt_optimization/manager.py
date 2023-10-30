@@ -24,7 +24,7 @@ def get_args():
     parser.add_argument('--detailed_log', type=int, default=-1, help='Output detailed prompt or not')
 
     # Model parameters
-    parser.add_argument('--model_name_or_path', type=str, default="openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct", help='Model name or path')
+    parser.add_argument('--model_name_or_path', type=str, default="OpenFlamingo-3B-vitl-mpt1b-langinstruct", help='Model name or path')
     parser.add_argument('--rices', action='store_true', help='Use rices to evaluate score or not')
     parser.add_argument("--shots", nargs="+", default=[0, 4, 8, 16, 32], type=int)
     parser.add_argument("--num_samples", type=int, default=-1, help="Number of samples to evaluate on. -1 for all samples.")

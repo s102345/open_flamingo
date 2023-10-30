@@ -3,14 +3,18 @@
     "vision_encoder_pretrained": "openai",
     "lm_path": "anas-awadalla/mpt-1b-redpajama-200b-dolly",
     "lm_tokenizer_path": "anas-awadalla/mpt-1b-redpajama-200b-dolly",
-    "checkpoint_path": "C:\\Users\\Xuan\\Desktop\\Program\\open_flamingo\\open_flamingo\\prompt_optimization\\data\\checkpoint.pt",
+    "checkpoint_path": "C:\\Users\\Xuan\\Desktop\\Program\\open_flamingo\\open_flamingo\\prompt_optimization\\data\\OpenFlamingo-3B-vitl-mpt1b-langinstruct.pt",
     "device": "cuda:0",
     "cross_attn_every_n_layers": 1,
-    "rices": true,
+    "rices": false,
     "cached_demonstration_features": "C:\\Users\\Xuan\\Desktop\\Program\\open_flamingo\\open_flamingo\\prompt_optimization\\data/RICES-features",
     "num_samples": -1,
     "shots": [
-        4
+        0,
+        4,
+        8,
+        16,
+        32
     ],
     "num_trials": 1,
     "trial_seeds": [

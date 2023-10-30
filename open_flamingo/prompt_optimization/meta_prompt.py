@@ -23,8 +23,8 @@ class MetaPromptGenerator():
         default_meta_prompt = {
             "meta-instruction": [
                 "I have provided several prompts, each paired with a score. These prompts are arranged in ascending order based on their scores. A higher score indicates better quality.",
-                "Below, you'll find images paired with captions. For each image, there's an <INS> tag in its corresponding caption. Your task is to replace the <INS> tag with appropriate content based on the provided details accompanying the image.",
-                "Please write a new prompt that is distinct from the ones provided. Aim for a score that's as high as possible. Do not generate image captions. When submitting your text, encase it in square brackets."
+                "Below are some problems.",
+                "Please write a new prompt that is distinct from the ones provided. Aim for a score that's as high as possible.  The prompt should be concise, effective, and generally applicable to all problems above. Do not generate image captions. When submitting your text, encase it in square brackets. Do not mentions <INS> token. Prompt should be ended with preposition or colon."
             ],
             "solution-score pair": [],
             "optimization task": []
@@ -121,6 +121,7 @@ class MetaPromptGenerator():
 
         # Prompt-Score pair
         for pair in prompt['solution-score pair']:
+            prompt = pair['Prompt']
             meta_prompt += f"prompt: {pair['Prompt']}, score: {pair['Score']}\n"
         meta_prompt += '\n'
         meta_prompt += prompt["meta-instruction"][1]
@@ -128,11 +129,11 @@ class MetaPromptGenerator():
 
         # Optimization task
         for i, task in enumerate(prompt['optimization task']):
-            meta_prompt += "input: \n"
+            meta_prompt += "Problem:\n input: \n"
             # Example in task
             for j, task_examples in enumerate(task):
                 if self.args.extra_information:
-                    meta_prompt += "<IMG> {additional information: "
+                    meta_prompt += "<img> {additional information: "
                     for info in task_examples['extra_info']:
                         amount = task_examples['extra_info'][info]
                         if info == list(task_examples['extra_info'])[-1]:
@@ -141,7 +142,7 @@ class MetaPromptGenerator():
                             meta_prompt += f"{amount} {info}, "
                     meta_prompt += "}\n"
                 else:
-                    meta_prompt += f"<IMG>\n"
+                    meta_prompt += f"<img>\n"
 
                 choosed_caption = random.choice(task_examples['captions'])
 
@@ -149,10 +150,11 @@ class MetaPromptGenerator():
                     meta_prompt += "<INS>\n"
                     meta_prompt += f"output: {choosed_caption}\n"
                 else:
-                    meta_prompt += f"<INS> {choosed_caption}\n"
+                    meta_prompt += f"<INS> {choosed_caption} <|endofchunk|>\n"
 
         meta_prompt += '\n'
         meta_prompt += prompt["meta-instruction"][2]
+        print(meta_prompt)
         return meta_prompt
 
     def get_top_pairs(self):
